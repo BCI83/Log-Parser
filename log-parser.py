@@ -8,7 +8,7 @@ import os
 ###################################################################################################
 
 def clear():
-    ostest = platform.platform()
+    ostest = platform.platform()    
     if ostest[0] == 'W':
         os.system('cls')
     else: 
@@ -27,7 +27,7 @@ def writefile(writepath,list,inputpath='',addlogname=0,WriteAppend='w',printoutp
         for item in list:f.write("%s" % item)
         if printoutputpath != 1:print('File output to : '+writepath)
 
-def readfulllog():
+def readfulllog():    
     start = time.time()
     Linelist = []    
     print('Reading the full concatenated log file into memory...')
@@ -414,6 +414,7 @@ while True:
             break
         clear()    
     elif mainmenuq == '3':
+        clear()
         while True:
             print('\nPick an option from the choices below (applied per log line)\n')
             print('1: Back to main search menu')
@@ -424,7 +425,9 @@ while True:
             print('6: Errors    (Full Error stacks (ignores date/time settings))')
             errorwarnmenuq = input('\nEnter the corresponding number :\n>')
             clear()
-            if errorwarnmenuq == '1':break
+            if errorwarnmenuq == '1':
+                clear()
+                break
             elif errorwarnmenuq == '2':
                 print('Creating Warning list log')
                 customsearch(' WARN ',1,Lines,1)
@@ -447,6 +450,7 @@ while True:
             if ping.isdigit():break
         latencyreport(Lines,ping,'Delivery cycle process time: ')
     elif mainmenuq == '6':
+        clear()
         while True:
             print('\nPick an option from the choices below\n')
             print('1: Back to main search menu')
@@ -457,6 +461,7 @@ while True:
             print('4: Two string AND/OR/NOT search menu')
             print('5: Three string AND/OR/NOT search menu')
             custommenuq = input('\nEnter the corresponding number :\n>')
+            clear()
             if custommenuq == '1':
                 clear()
                 break
@@ -465,16 +470,19 @@ while True:
             elif custommenuq == '3':
                 searchterm = input('Enter the string to search for : \n>')
                 customsearch(searchterm,1,Lines,caseselected)
-            elif custommenuq == '4':   
-                while True:
-                    clear()
+            elif custommenuq == '4': 
+                clear()
+                while True:                    
                     print('\nPick an option from the choices below (logic applied per log line)\n')
                     print('1: Back to the previous menu')
                     print('2: Match string-x AND string-y')
                     print('3: Match string-x OR string-y')
                     print('4: Match string-x AND NOT string-y')
                     siicustommenuq = input('\nEnter the corresponding number :\n>')
-                    if siicustommenuq == '1':break
+                    clear()
+                    if siicustommenuq == '1':
+                        clear()
+                        break
                     elif siicustommenuq == '2':# x AND y
                         print('Search type : x AND y')
                         x = input('Enter the \'x\' string value : \n>')
@@ -490,7 +498,8 @@ while True:
                         x = input('Enter the \'x\' string value : \n>')
                         y = input('Enter the \'y\' string value : \n>')
                         customsearch(x,2,Lines,caseselected,y)
-            elif custommenuq == '5':   
+            elif custommenuq == '5':
+                clear() 
                 while True:
                     print('\nPick an option from the choices below (logic applied per log line)\n')
                     print('1: Back to the previous menu')
@@ -502,40 +511,44 @@ while True:
                     print('7: Match string-x AND NOT string-y AND NOT string-z')                    
                     siiicustommenuq = input('\nEnter the corresponding number :\n>')
                     clear()                    
-                    if siiicustommenuq == '1':break                  
+                    if siiicustommenuq == '1':
+                        clear()
+                        break                  
                     if siiicustommenuq == '2':# x AND y AND z
                         print('Search type : x AND y AND z')
-                        x = input('Enter the first string to search for : \n>')
-                        y = input('Enter the second string to search for : \n>')
-                        z = input('Enter the second string to search for : \n>')
+                        x = input('Enter the \'x\' string value : \n>')
+                        y = input('Enter the \'y\' string value : \n>')
+                        z = input('Enter the \'z\' string value : \n>')
                         customsearch(x,5,Lines,caseselected,y,z)
                     elif siiicustommenuq == '3':# x AND (y OR z)
                         print('Search type : x AND (y OR z)')
-                        x = input('Enter the first string to search for : \n>')
-                        y = input('Enter the second string to search for : \n>')
-                        z = input('Enter the second string to search for : \n>')
+                        x = input('Enter the \'x\' string value : \n>')
+                        y = input('Enter the \'y\' string value : \n>')
+                        z = input('Enter the \'z\' string value : \n>')
                         customsearch(x,6,Lines,caseselected,y,z)
                     elif siiicustommenuq == '4':# x AND y AND NOT z
                         print('Search type : x AND y AND NOT z')
-                        x = input('Enter the first string to search for : \n>')
-                        y = input('Enter the second string to search for : \n>')
-                        z = input('Enter the string to Exclude : \n>')
+                        x = input('Enter the \'x\' string value : \n>')
+                        y = input('Enter the \'y\' string value : \n>')
+                        z = input('Enter the \'z\' string value : \n>')
                         customsearch(x,7,Lines,caseselected,y,z)
                     elif siiicustommenuq == '5':# x OR y OR z
                         print('Search type : x OR y OR z')
-                        x = input('Enter the first string to search for : \n>')
-                        y = input('Enter the second string to search for : \n>')
-                        z = input('Enter the second string to search for : \n>')
+                        x = input('Enter the \'x\' string value : \n>')
+                        y = input('Enter the \'y\' string value : \n>')
+                        z = input('Enter the \'z\' string value : \n>')
                         customsearch(x,8,Lines,caseselected,y,z)
                     elif siiicustommenuq == '6':# (x OR y) AND NOT z
                         print('Search type : (x OR y) AND NOT z')
-                        x = input('Enter the first string to search for : \n>')
-                        y = input('Enter the second string to search for : \n>')
-                        z = input('Enter the string to Exclude : \n>')
+                        x = input('Enter the \'x\' string value : \n>')
+                        y = input('Enter the \'y\' string value : \n>')
+                        z = input('Enter the \'z\' string value : \n>')
                         customsearch(x,9,Lines,caseselected,y,z)
                     elif siiicustommenuq == '7':# x AND NOT y AND NOT z
                         print('Search type : x AND NOT y AND NOT z')
-                        x = input('Enter the first string to search for : \n>')
-                        y = input('Enter the first string to Exclude : \n>')
-                        z = input('Enter the second string to Exclude : \n>')
+                        x = input('Enter the \'x\' string value : \n>')
+                        y = input('Enter the \'y\' string value : \n>')
+                        z = input('Enter the \'z\' string value : \n>')
                         customsearch(x,10,Lines,caseselected,y,z)
+                clear()        
+        clear()                
