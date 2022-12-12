@@ -234,6 +234,7 @@ def latencyreport(list,limit,type):
     if todatetimestring != '':
         dateinfo = '  +  Between: '+fromdatetimestring+'  &  '+todatetimestring
         dtto = datetime.strptime(todatetimestring, '%Y-%m-%d %H:%M:%S.%f')
+        dtfrom = datetime.strptime(fromdatetimestring, '%Y-%m-%d %H:%M:%S.%f')
     elif fromdatetimestring != '':
         dateinfo = '  +  From '+fromdatetimestring+' to the end of the log'
         dtfrom = datetime.strptime(fromdatetimestring, '%Y-%m-%d %H:%M:%S.%f')
@@ -550,5 +551,6 @@ while True:
                         y = input('Enter the \'y\' string value : \n>')
                         z = input('Enter the \'z\' string value : \n>')
                         customsearch(x,10,Lines,caseselected,y,z)
+                    
                 clear()        
         clear()                
