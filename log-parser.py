@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import platform
 import time
 from datetime import datetime
@@ -177,7 +179,9 @@ def summary(type):
             ecount = 0
             for tline in trimmedlist:
                 if [err] == [tline]:ecount += 1
-            uereport += [str(ecount)+'\t instances of : '+err]
+            if ecount < 1000:addtab = '\t'
+            else:addtab=''
+            uereport += [str(ecount)+addtab+'\t instances of : '+err]
     print('total unique '+type+'s found : '+str(len(uereport)))
     writefile(logpath+'/z.'+type+'Report.log',uereport)
 
