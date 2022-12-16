@@ -43,8 +43,15 @@ def customsearch(searchw1,searchtype,list,cs,searchw2='',searchw3=''):
     resultlist = []
     line1addition = ''
     dateinfo = ''
-    if searchtype == 2:line1addition = '  +  Exclude: \''+searchw2+'\''
-    if searchtype == 3:line1addition = '  +  Match: \''+searchw2+'\''
+    if searchtype == 2:line1addition = '  AND NOT  Match: \''+searchw2+'\''
+    if searchtype == 3:line1addition = '  AND  Match: \''+searchw2+'\''
+    if searchtype == 4:line1addition = '  OR  Match: \''+searchw2+'\''
+    if searchtype == 5:line1addition = '  AND  Match: \''+searchw2+'\'  AND  Match: \''+searchw3+'\''
+    if searchtype == 6:line1addition = '  AND  Match: \''+searchw2+'\'  OR  Match: \''+searchw3+'\''
+    if searchtype == 7:line1addition = '  AND  Match: \''+searchw2+'\'  AND NOT  Match: \''+searchw3+'\''
+    if searchtype == 8:line1addition = '  OR  Match: \''+searchw2+'\'  OR  Match: \''+searchw3+'\''
+    if searchtype == 9:line1addition = '  OR  Match: \''+searchw2+'\'  AND NOT  Match: \''+searchw3+'\''
+    if searchtype == 1:line1addition = '  AND NOT  Match: \''+searchw2+'\'  AND NOT  Match: \''+searchw3+'\''    
     if todatetimestring != '':dateinfo = '  +  Between: '+fromdatetimestring+'  &  '+todatetimestring
     elif fromdatetimestring != '':dateinfo = '  +  From '+fromdatetimestring+' to the end of the log'
     resultlist+='Search results for > Match: \''+searchw1+'\''+line1addition+dateinfo+'\n\n'
@@ -263,7 +270,7 @@ def latencyreport(list,limit,type):
     print('Operation completed in '+str(end - start)[:4]+' seconds\n\n')
 
 ###################################################################################################
-###                   Main() starts here with selecting log files                               ###
+###                                     Main() starts here:                                     ###
 ###################################################################################################
 
 clear()
@@ -279,20 +286,31 @@ Lines = []
 logname = 'z.combined.log'
 
 while True:
-    logpath = input('\nEnter the absolute path to the directory which contains the log file(s):\n> ')
+    logpath = input('\nEnter the absolute path to the directory which contains the log file(s):\nLinux example /symphony/cpx/customer/logs\nWindows example c:\\users\\user\\desktop\\logs\n> ')
     logpath = logpath+'/'
     logpath = logpath.replace('\\', '/')    
     if os.path.exists(logpath):break
     else:
         clear()
         print('\nThe path \''+logpath+'\'\ndoes not appear to be valid, please try again\n')
-while True:    
-    print('\nPick an option from the choices below\n')
-    print('1: Work with any single log/text file')
+while True:
+    combinedlog = 0
+    logcount = 0
+    for x in range (1, 101):
+        slp = logpath+'symphony-commproxy-'+str(x)+'.log'
+        if os.path.exists(slp):logcount += 1
+    if os.path.exists(logpath+'symphony-commproxy.log'):logcount += 1
+    if os.path.exists(logpath+logname):combinedlog += 1
+    print('\nPick an option from the choices below\n\nThe directory \''+logpath+'\' contains:\n')
+    print(str(len([entry for entry in os.listdir(logpath) if os.path.isfile(os.path.join(logpath, entry))]))+'\tfiles')
+    print(str(combinedlog)+'\tpre-existing z.combined.log files')
+    print(str(logcount)+'\tsymphony-commproxy*.log files')
+    print('\n1: Work with any single log/text file')
     print('2: Work with a pre-existing z.combined.log file')
-    print('3: Work with all the symphony-commproxy-*.log files (this will create a new \'z.combined.log\' file)')
-    logtypeq = input('\nEnter the corresponding number :\n> ')
-    clear()
+    print('3: Work with all the symphony-commproxy*.log files (this will create a new \'z.combined.log\' file)')
+    print('4: Change working directory')
+    logtypeq = input('\nEnter the corresponding number :\n> ')   
+    clear() 
     if logtypeq == '1':
         while True:
             logname = input('\nEnter the file name of the log file:\n> ')
@@ -314,16 +332,6 @@ while True:
             filestowork = 0
             csymplogfileexists = 0
             if os.path.exists(logpath):
-                print('The directory exists... Checking for log files...')
-                symlogfilesfound = 0
-                logcount = 0
-                for x in range (1, 101):
-                    slp = logpath+'symphony-commproxy-'+str(x)+'.log'
-                    if os.path.exists(slp):logcount += 1
-                if logcount > 0:symlogfilesfound += 2
-                if symlogfilesfound == 0:print('No symphony-commproxy*.log or combined.log files found')
-                elif symlogfilesfound == 2:print(str(logcount)+' symphony-commproxy*.log files found')
-                elif symlogfilesfound == 3:print(str(logcount)+' symphony-commproxy*.log files found\nA pre-existing z.combined.log file has been found\n')
                 with open(logpath+logname, 'w') as f:f.write('')
                 filestowork = 1
                 logcount = 0
@@ -339,13 +347,21 @@ while True:
                     print('Reading : '+logpath+'symphony-commproxy.log')
                     listtowrite = readfile(logpath+'symphony-commproxy.log')
                     writefile(logpath+logname,listtowrite,logpath+'symphony-commproxy.log',1,'a',1)            
-                    logcount += 1
-                        
+                    logcount += 1                        
             if logcount > 0:break           
             else:print('\''+logpath+'\' directory not found on this system\nPlease try again')
-        if csymplogfileexists == 0:print('A single log file has been created with all the log files concatenated in order\nIt is located at \''+logpath+'z.combined.log\'')
+        if csymplogfileexists == 0:print('A single log file has been created with all the log files concatenated in order\nIt is located at \''+logpath+logname+'\'')
         Lines = readlog(logpath+logname)
-        break      
+        break
+    elif logtypeq == '4':
+                while True:
+                    logpath = input('\nEnter the absolute path to the directory which contains the log file(s):\nLinux example /symphony/cpx/customer/logs\nWindows example c:\\users\\user\\desktop\\logs\n> ')
+                    logpath = logpath+'/'
+                    logpath = logpath.replace('\\', '/')    
+                    if os.path.exists(logpath):break
+                    else:
+                        clear()
+                        print('\nThe path \''+logpath+'\'\ndoes not appear to be valid, please try again\n')    
 while True:
     print('\nPick an option from the choices below\n')
     print('1: Quit')
@@ -418,24 +434,32 @@ while True:
     elif mainmenuq == '3':
         clear()
         while True:
+            combinedlog = 0
+            logcount = 0
+            for x in range (1, 101):
+                slp = logpath+'symphony-commproxy-'+str(x)+'.log'
+                if os.path.exists(slp):logcount += 1
+            if os.path.exists(logpath+'symphony-commproxy.log'):logcount += 1
+            if os.path.exists(logpath+logname):combinedlog += 1
+
             print('\nThe currently selected directory is: \''+logpath+'\'\nThe currently selected file is: \''+logname+'\'\n')
-            if os.path.exists(logpath+logname):print('This combination is valid')
-            else:print('\nThis combination is not valid\nPlease specify a path and file combination that is valid\n')
-            print('\nPick an option from the choices below\n')
+            if os.path.exists(logpath+logname):print('The selected path and file combination is valid\n')
+            else:print('\nThe selected path and file combination is not valid\nPlease specify a path and file combination that is valid\n')
+
+            print('Pick an option from the choices below\n')
             if os.path.exists(logpath+logname):print('1: Back to main search menu')
-            print('2: Load the full concatenated log file (Default)')
+            print('2: Load the full concatenated log file')
             print('3: Specify a single log file to work with')
-            print('4: Change the working directory (currently set to:\''+logpath+'\'')
+            print('4: Change the working directory')
             logselectmenuq = input('\nEnter the corresponding number :\n> ')
             clear()
             if logselectmenuq == '1':
                 if os.path.exists(logpath+logname):break
             elif logselectmenuq == '2':
-                logname = 'z.combined.log'
                 if os.path.exists(logpath+logname):
                     Lines = readlog(logpath+logname)
                     break
-                else:print('There is no \'z.combined.log\' file in the path \''+logpath+'\'')
+                else:print('There is no \''+logname+'\' file in the path \''+logpath+'\'')
             elif logselectmenuq == '3':
                 while True:
                     logname = input('\nEnter the file name of the log file:\n> ')
@@ -448,7 +472,7 @@ while True:
                 break
             elif logselectmenuq == '4':
                 while True:
-                    logpath = input('\nEnter the absolute path to the directory which contains the log file(s):\n> ')
+                    logpath = input('\nEnter the absolute path to the directory which contains the log file(s):\nLinux example /symphony/cpx/customer/logs\nWindows example c:\\users\\user\\desktop\\logs\n> ')
                     logpath = logpath+'/'
                     logpath = logpath.replace('\\', '/')    
                     if os.path.exists(logpath):break
