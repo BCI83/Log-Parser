@@ -276,7 +276,7 @@ casesetting = ''
 firstrun = 1
 caseselected = 0
 Lines = []
-logname = 'z.full-log.log'
+logname = 'z.combined.log'
 
 while True:
     logpath = input('\nEnter the absolute path to the directory which contains the log file(s):\n> ')
@@ -288,10 +288,11 @@ while True:
         print('\nThe path \''+logpath+'\'\ndoes not appear to be valid, please try again\n')
 while True:    
     print('\nPick an option from the choices below\n')
-    print('1: Specify a single log/text file')
-    print('2: A previously created concatenated symphony-commproxy log file (z.full-log.log)')
-    print('3: Work with all of the symphony-commproxy-*.log files (this will create a new \'z.full-log.log\' file)')
+    print('1: Work with any single log/text file')
+    print('2: Work with a pre-existing z.combined.log file')
+    print('3: Work with all the symphony-commproxy-*.log files (this will create a new \'z.combined.log\' file)')
     logtypeq = input('\nEnter the corresponding number :\n> ')
+    clear()
     if logtypeq == '1':
         while True:
             logname = input('\nEnter the file name of the log file:\n> ')
@@ -307,7 +308,7 @@ while True:
             break
         else:
             clear()
-            print('\n\''+logpath+logname+'\' not found...\n')            
+            print('\n\''+logpath+logname+'\' not found...')            
     elif logtypeq == '3':
         while True:
             filestowork = 0
@@ -320,9 +321,9 @@ while True:
                     slp = logpath+'symphony-commproxy-'+str(x)+'.log'
                     if os.path.exists(slp):logcount += 1
                 if logcount > 0:symlogfilesfound += 2
-                if symlogfilesfound == 0:print('No symphony-commproxy*.log or full-log.log files found')
+                if symlogfilesfound == 0:print('No symphony-commproxy*.log or combined.log files found')
                 elif symlogfilesfound == 2:print(str(logcount)+' symphony-commproxy*.log files found')
-                elif symlogfilesfound == 3:print(str(logcount)+' symphony-commproxy*.log files found\nA pre-existing z.full-log.log file has been found\n')
+                elif symlogfilesfound == 3:print(str(logcount)+' symphony-commproxy*.log files found\nA pre-existing z.combined.log file has been found\n')
                 with open(logpath+logname, 'w') as f:f.write('')
                 filestowork = 1
                 logcount = 0
@@ -342,9 +343,9 @@ while True:
                         
             if logcount > 0:break           
             else:print('\''+logpath+'\' directory not found on this system\nPlease try again')
-        if csymplogfileexists == 0:print('A single log file has been created with all the log files concatenated in order\nIt is located at \''+logpath+'z.full-log.log\'')
-        Lines = readlog(logpath+logname)        
-    if logtypeq == 1 or logtypeq == 2:break
+        if csymplogfileexists == 0:print('A single log file has been created with all the log files concatenated in order\nIt is located at \''+logpath+'z.combined.log\'')
+        Lines = readlog(logpath+logname)
+        break      
 while True:
     print('\nPick an option from the choices below\n')
     print('1: Quit')
@@ -354,9 +355,9 @@ while True:
         else:print('   To   : End of log')
     else:print('2: Date/time   (Specify a time range to search in (optional))')
     print('3: Log select  (Currently selected file: \''+logpath+logname+'\')')
-    print('4: Err & Warn  (Preconfigured reports for Errors and Warnings)')
-    print('5: Latency     (Latency over provided threshold report (for: \'duration =\'))')
-    print('6: Latency     (Latency over provided threshold report (for: \'Delivery cycle process time:\'))')
+    print('4: Err & Warn  (Preconfigured reports for Errors and Warnings in CPX logs)')
+    print('5: Latency     (Latency over provided threshold report (for: \'duration =\') in CPX logs)')
+    print('6: Latency     (Latency over provided threshold report (for: \'Delivery cycle process time:\') in CPX logs)')
     print('7: Custom      (Display the 1, 2 or 3 string AND/OR/NOT search menu)')
     mainmenuq = input('\nEnter the corresponding number :\n> ')
     clear()
@@ -430,11 +431,11 @@ while True:
             if logselectmenuq == '1':
                 if os.path.exists(logpath+logname):break
             elif logselectmenuq == '2':
-                logname = 'z.full-log.log'
+                logname = 'z.combined.log'
                 if os.path.exists(logpath+logname):
                     Lines = readlog(logpath+logname)
                     break
-                else:print('There is no \'z.full-log.log\' file in the path \''+logpath+'\'')
+                else:print('There is no \'z.combined.log\' file in the path \''+logpath+'\'')
             elif logselectmenuq == '3':
                 while True:
                     logname = input('\nEnter the file name of the log file:\n> ')
