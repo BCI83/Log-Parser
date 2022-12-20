@@ -93,8 +93,7 @@ def customsearch(searchw1,searchtype,list,cs,searchw2='',searchw3=''):
             elif searchtype == 3:
                 if tempsearchw1 in templine and tempsearchw2 in templine:matchfound = 1
             elif searchtype == 4:
-                if tempsearchw1 in templine or tempsearchw2 in templine:matchfound = 1
-            
+                if tempsearchw1 in templine or tempsearchw2 in templine:matchfound = 1            
             elif searchtype == 5:
                 if tempsearchw1 in templine and tempsearchw2 in templine and tempsearchw3 in templine:matchfound = 1
             elif searchtype == 6:
@@ -107,7 +106,6 @@ def customsearch(searchw1,searchtype,list,cs,searchw2='',searchw3=''):
                 if (tempsearchw1 in templine or tempsearchw2 in templine) and not tempsearchw3 in templine:matchfound = 1
             elif searchtype == 10:
                 if tempsearchw1 in templine and not tempsearchw2 in templine and not tempsearchw3 in templine:matchfound = 1
-
             if matchfound == 1:
                 resultlist+=[line]
                 matchcount += 1
@@ -197,7 +195,7 @@ def summary(type):
 
 def geterrorstacks():
     start = time.time()
-    print('Creating full Error list log')
+    print('Creating full Error stack list log')
     errfound = 0
     errorwarnlist = []
     for line in Lines:
@@ -205,7 +203,7 @@ def geterrorstacks():
             errfound = 0
             if ' ERROR ' in line:
                 errfound = 1
-                errorwarnlist+=['\n############################################################################################################\n\n'+line]
+                errorwarnlist+=['\n##########################################################################################################################################\n\n'+line]
         elif errfound == 1:errorwarnlist+=[line]
     writefile(logpath+'z.error-stacks.log',errorwarnlist)
     end = time.time()
@@ -442,9 +440,9 @@ while True:
             if os.path.exists(logpath+'symphony-commproxy.log'):logcount += 1
             if os.path.exists(logpath+logname):combinedlog += 1
 
-            print('\nThe currently selected directory is: \''+logpath+'\'\nThe currently selected file is: \''+logname+'\'\n')
+            print('\nThe selected directory is: \''+logpath+'\'\nThe selected file is: \''+logname+'\'\n')
             if os.path.exists(logpath+logname):print('The selected path and file combination is valid\n')
-            else:print('\nThe selected path and file combination is not valid\nPlease specify a path and file combination that is valid\n')
+            else:print('****** The selected path and file combination is not valid ******\n****** Please specify a path and file combination that is valid ******\n')
 
             print('Pick an option from the choices below\n')
             if os.path.exists(logpath+logname):print('1: Back to main search menu')
@@ -614,5 +612,5 @@ while True:
                         y = input('Enter the \'y\' string value :\n> ')
                         z = input('Enter the \'z\' string value :\n> ')
                         customsearch(x,10,Lines,caseselected,y,z)                    
-                clear()        
-        clear()                
+                clear()
+        clear()
