@@ -11,9 +11,9 @@ import os
 
 def clear():
     ostest = platform.platform()    
-    if ostest[0] == 'W':
+    if ostest[0] == 'W': # Then Windows 
         os.system('cls')
-    else: 
+    else: # Assume Linux / Mac
         os.system('clear')
 
 def readfile(inputpath):
@@ -461,10 +461,11 @@ while True:
             if logselectmenuq == '1':
                 if os.path.exists(logpath+logname):break
             elif logselectmenuq == '2':
-                if os.path.exists(logpath+logname):
-                    Lines = readlog(logpath+logname)
+                logname = "z.combined.log"
+                if os.path.exists(logpath+"z.combined.log"):
+                    Lines = readlog(logpath+"z.combined.log")
                     break
-                else:print('There is no \''+logname+'\' file in the path \''+logpath+'\'')
+                else:print('There is no \'z.combined.log\' file in the path \''+logpath+'\'')
             elif logselectmenuq == '3':
                 while True:
                     logname = input('\nEnter the file name of the log file:\n> ')
