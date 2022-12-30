@@ -26,15 +26,17 @@
 		6: Errors    (Full Error stacks (ignores date/time settings))
 5: Latency     (Latency over provided threshold report (for: 'duration =') in CPX logs)
 			-Enter the minimum latency for the report (ms)
+				-Please enter the filename you want the output file to have (only if matches found)
 6: Latency     (Latency over provided threshold report (for: 'Delivery cycle process time:') in CPX logs)
 			-Enter the minimum latency for the report (ms)
+				-Please enter the filename you want the output file to have (only if matches found)
 7: Custom      (Display the 1, 2 or 3 string AND/OR/NOT search menu)
 		1: Back to main search menu
 		2: Change case sensitivity - Currently set to 'Case Insensitive'
 		3: Match one string
 			-Enter the string to search for :
 				-Please enter the filename you want the output file to have (only if matches found)
-	4: Two string AND/OR/NOT search menu
+		4: Two string AND/OR/NOT search menu
 			1: Back to the previous menu
 			2: Match string-x AND string-y
 				-Enter the 'x' string value :
@@ -48,7 +50,7 @@
 				-Enter the 'x' string value :
 					-Enter the 'y' string value :
 						-Please enter the filename you want the output file to have (only if matches found)
-	5: Three string AND/OR/NOT search menu
+		5: Three string AND/OR/NOT search menu
 			1: Back to the previous menu
 			2: Match string-x AND string-y AND string-z
 				-Enter the 'x' string value :
