@@ -131,16 +131,19 @@ def customsearch(searchw1,searchtype,list,cs,searchw2='',searchw3=''):
 def summary(type):
     start = time.time()
     print('Generating '+type+' report')
-    if type == ' WARN ':print('Depending on the time range selected, CPU and storage I/O this can take several minutes')
+    if type == 'warning':print('Depending on the time range selected, CPU and storage I/O this can take several minutes')
+    stype = ''
+    if type == 'error':stype = 'ERROR'
+    elif type == 'warning':stype = 'WARN'
     errorwarnlist = []
     trimmedlist = []
     uniqueerrorlist = []
     inrange = 0
     startingminute = 0
-    customsearch(type,1,Lines,1)
-    errorwarnlist = readfile(logpath+'z.'+type+'.log')
+    customsearch(' '+stype+' ',1,Lines,1)
+    errorwarnlist = readfile(logpath+'z.'+stype+'.log')
 
-    print('\nsearching for unique instances of '+type+'...\n')
+    print('\nsearching for unique '+type+'s...\n')
 
     if fromdatetimestring != '':dtfrom = datetime.strptime(fromdatetimestring, '%Y-%m-%d %H:%M:%S.%f')
     if todatetimestring != '':dtto = datetime.strptime(todatetimestring, '%Y-%m-%d %H:%M:%S.%f')
@@ -503,11 +506,11 @@ while True:
             elif errorwarnmenuq == '2':
                 print('Creating Warning list log')
                 customsearch(' WARN ',1,Lines,1)
-            elif errorwarnmenuq == '3':summary(' WARN ')
+            elif errorwarnmenuq == '3':summary('warning')
             elif errorwarnmenuq == '4':
                 print('Creating short Error list log')
                 customsearch(' ERROR ',1,Lines,1)
-            elif errorwarnmenuq == '5':summary(' ERROR ')
+            elif errorwarnmenuq == '5':summary('error')
             elif errorwarnmenuq == '6':geterrorstacks()
     elif mainmenuq == '5':
         while True:
