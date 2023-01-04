@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 
-import platform
+import platform, subprocess, uuid
 import time
 from datetime import datetime
 import os
+ostest = platform.platform()    
 
 ###################################################################################################
 ###                                 Functions defined here:                                     ###
 ###################################################################################################
 
 def clear():
-    ostest = platform.platform()    
     if ostest[0] == 'W': # Then Windows 
         os.system('cls')
     else: # Assume Linux / Mac
@@ -28,6 +28,43 @@ def writefile(writepath,list,inputpath='',addlogname=0,WriteAppend='w',printoutp
         if addlogname == 1:f.write('\n****************************************'+inputpath+'****************************************\n\n')
         for item in list:f.write("%s" % item)
         if printoutputpath != 1:print('File output to : '+writepath)
+
+def renamefile(tfname):
+    if os.path.exists(logpath+tfname):
+        while True:
+            clear()
+            fname = input('Please provide a name for the file:\n(z. and .log will be added automatically)\n>')
+            try:
+                os.rename(logpath+tfname, logpath+'z.'+fname+'.log')
+                print('File successfully saved as: '+logpath+'z.'+fname+'.log')
+                break
+            except:print('Failed to save, check that only valid filename characters are being entered and try again.')
+    
+def displayresult(stringlist):
+    fname = str(uuid.uuid4())
+    winapps = ['C:\\Program Files\\Notepad++\\notepad++.exe', 'C:\\Program Files (x86)\\Notepad++\\notepad++.exe', 'C:\\Windows\\System32\\notepad.exe']
+    with open(logpath+'z.'+fname+'.log', 'w') as f:
+        for line in stringlist:
+            f.write(line)
+    v1 = ''
+    if ostest[0] == 'W':
+        for app in winapps:
+            if os.path.exists(app):
+                v1 = app
+                break
+    elif ostest[0] == 'L':
+        if os.path.isfile('/usr/bin/vim'):
+            v1 = 'vim'
+        elif os.path.isfile('/usr/bin/nano'):
+            v1 = 'nano'
+
+    v2 = logpath+'z.'+fname+'.log'
+      
+    if os.path.exists(logpath+'z.'+fname+'.log'):
+        if v1 != '':subprocess.call([v1, v2])        
+        elif ostest[0] == 'D':subprocess.run(['open', '-a', 'Terminal', '-n', 'vim', v2]) # This method of opening vim in a new Mac terminal window with pre-loaded content is untested
+        os.remove(logpath+'z.'+fname+'.log')
+        
 
 def readlog(path):    
     start = time.time()
@@ -82,8 +119,8 @@ def customsearch(searchw1,searchtype,list,cs,searchw2='',searchw3=''):
                 if searchw2 != '':tempsearchw2 = searchw2
                 if searchw3 != '':tempsearchw3 = searchw3
             elif cs == 0:
-                templine = line.lower()
-                tempsearchw1 = searchw1.lower()
+                templine = str(line).lower()
+                tempsearchw1 = str(searchw1).lower()
             if searchw2 != '':tempsearchw2 = searchw2.lower()
             if searchw3 != '':tempsearchw3 = searchw3.lower()
             if searchtype == 1:
@@ -111,39 +148,23 @@ def customsearch(searchw1,searchtype,list,cs,searchw2='',searchw3=''):
                 matchcount += 1
     end = time.time()
     clear()
-    print('Search complete... Matches found : '+str(matchcount)+'\nOperation completed in '+str(end - start)[:4]+' seconds\n\n')
+    print('Search complete...\nOperation completed in '+str(end - start)[:4]+' seconds\nMatches found: '+str(matchcount)+'\n\n')
 
-    while True:
-        if matchcount == 0:break
-        if searchw1 == ' ERROR ':
-            writefile(logpath+'z.ERROR.log',resultlist)
-            break
-        elif searchw1 == ' WARN ':
-            writefile(logpath+'z.WARN.log',resultlist)
-            break
-        else:               
-            fname = input('Please enter the filename you want the output file to have\nThe file name will be prefixed with \'z.\' and appended with \'.log\' automatically\n>')
-            try:
-                writefile(logpath+'z.'+fname+'.log',resultlist)
-                break
-            except:print('\nBad filename, please try again\n')
-
-def summary(type):
+    if matchcount != 0:
+        return resultlist
+        
+def summary(stype):
     start = time.time()
-    print('Generating '+type+' report')
-    if type == 'warning':print('Depending on the time range selected, CPU and storage I/O this can take several minutes')
-    stype = ''
-    if type == 'error':stype = 'ERROR'
-    elif type == 'warning':stype = 'WARN'
+    print('Generating '+stype+' report')
+    if stype == 'WARN':print('Depending on the time range selected, CPU and storage I/O this can take several minutes')
     errorwarnlist = []
     trimmedlist = []
     uniqueerrorlist = []
     inrange = 0
-    startingminute = 0
-    customsearch(' '+stype+' ',1,Lines,1)
-    errorwarnlist = readfile(logpath+'z.'+stype+'.log')
+    startingminute = 0    
+    errorwarnlist = customsearch(' '+stype+' ',1,Lines,1)
 
-    print('\nsearching for unique '+type+'s...\n')
+    print('searching for unique '+stype+'s...\n')
 
     if fromdatetimestring != '':dtfrom = datetime.strptime(fromdatetimestring, '%Y-%m-%d %H:%M:%S.%f')
     if todatetimestring != '':dtto = datetime.strptime(todatetimestring, '%Y-%m-%d %H:%M:%S.%f')
@@ -187,11 +208,10 @@ def summary(type):
             if ecount < 1000:addtab = '\t'
             else:addtab=''
             uereport += [str(ecount)+addtab+'\t instances of : '+err]
-    print('total unique '+type+'s found : '+str(len(uereport)))
-    writefile(logpath+'z.'+type+'Report.log',uereport)
-
     end = time.time()
-    print('Operation completed in '+str(end - start)[:4]+' seconds\n\n')
+    print('Operation completed inOperation completed in '+str(end - start)[:4]+' seconds\n\n')
+    print('total unique '+stype+'s found : '+str(len(uereport)))
+    return uereport
 
 def geterrorstacks():
     start = time.time()
@@ -205,9 +225,10 @@ def geterrorstacks():
                 errfound = 1
                 errorwarnlist+=['\n##########################################################################################################################################\n\n'+line]
         elif errfound == 1:errorwarnlist+=[line]
-    writefile(logpath+'z.error-stacks.log',errorwarnlist)
+    #writefile(logpath+'z.error-stacks.log',errorwarnlist)
     end = time.time()
     print('Operation completed in '+str(end - start)[:4]+' seconds\n\n')
+    return errorwarnlist
 
 def getlatency(latencystring,endtrim):
     ints = 0
@@ -221,52 +242,150 @@ def getlatency(latencystring,endtrim):
     return pingstring
 
 def latencyreport(list,limit,type):
-    start = time.time()
-    dateinfo = ''
-    resultlist = []
-    searchterm = type
-    inrange = 0
-    matchcount = 0
-    startingminute = 0
-    if todatetimestring != '':
-        dateinfo = '  +  Between: '+fromdatetimestring+'  &  '+todatetimestring
-        dtto = datetime.strptime(todatetimestring, '%Y-%m-%d %H:%M:%S.%f')
-        dtfrom = datetime.strptime(fromdatetimestring, '%Y-%m-%d %H:%M:%S.%f')
-    elif fromdatetimestring != '':
-        dateinfo = '  +  From '+fromdatetimestring+' to the end of the log'
-        dtfrom = datetime.strptime(fromdatetimestring, '%Y-%m-%d %H:%M:%S.%f')
-    resultlist+='Search results for > Match: \''+type+'\' with a response time over '+limit+'ms '+dateinfo+'\n\n'
-    for line in list:
-        if fromdatetimestring != '':
-            if startingminute == 0:                
-                if line[:16] == fromdatetimestring[:16]:startingminute = 1
-            else:
-                try:
-                    testline = line[:23]
-                    test = datetime.strptime(testline, '%Y-%m-%d %H:%M:%S.%f')
-                    if test >= dtfrom:inrange = 1
-                    if todatetimestring != '':
-                        if dtto <= test :inrange = 0
-                except:
-                    pass
-        else:inrange = 1
-        if inrange == 1:
-            if searchterm in line:
-                if type == 'duration =':teststring = getlatency(line,0)
-                else:teststring = getlatency(line,1)
-                if int(teststring) > int(limit):
-                    resultlist+=[line]
-                    matchcount += 1
-    print('Found '+str(matchcount)+' latencies over '+str(limit)+'ms')
-    end = time.time()
     while True:
-        fname = input('Please enter the filename you want the output file to have\nThe file name will be prefixed with \'z.\' and appended with \'.log\' automatically\n>')
-        try:
-            writefile(logpath+'z.'+fname+'.log',resultlist)
-            break
-        except:print('\nBad filename, please try again\n')
-    print('Operation completed in '+str(end - start)[:4]+' seconds\n\n')
+        start = time.time()
+        dateinfo = ''
+        resultlist = []
+        searchterm = type
+        inrange = 0
+        matchcount = 0
+        startingminute = 0
+        if todatetimestring != '':
+            dateinfo = '  +  Between: '+fromdatetimestring+'  &  '+todatetimestring
+            dtto = datetime.strptime(todatetimestring, '%Y-%m-%d %H:%M:%S.%f')
+            dtfrom = datetime.strptime(fromdatetimestring, '%Y-%m-%d %H:%M:%S.%f')
+        elif fromdatetimestring != '':
+            dateinfo = '  +  From '+fromdatetimestring+' to the end of the log'
+            dtfrom = datetime.strptime(fromdatetimestring, '%Y-%m-%d %H:%M:%S.%f')
+        resultlist+='Search results for > Match: \''+type+'\' with a response time over '+limit+'ms '+dateinfo+'\n\n'
+        for line in list:
+            if fromdatetimestring != '':
+                if startingminute == 0:                
+                    if line[:16] == fromdatetimestring[:16]:startingminute = 1
+                else:
+                    try:
+                        testline = line[:23]
+                        test = datetime.strptime(testline, '%Y-%m-%d %H:%M:%S.%f')
+                        if test >= dtfrom:inrange = 1
+                        if todatetimestring != '':
+                            if dtto <= test :inrange = 0
+                    except:
+                        pass
+            else:inrange = 1
+            if inrange == 1:
+                if searchterm in line:
+                    if type == 'duration =':teststring = getlatency(line,0)
+                    else:teststring = getlatency(line,1)
+                    if int(teststring) > int(limit):
+                        resultlist+=[line]
+                        matchcount += 1
+        end = time.time()
+        print('Operation completed in '+str(end - start)[:4]+' seconds\n\n')
+        print('Found '+str(matchcount)+' latencies over '+str(limit)+'ms')
+        return resultlist
 
+def specifylogs():
+    logname = 'z.combined.log'
+    Lines = []
+    while True:
+        logpath = input('\nEnter the absolute path to the directory which contains the log file(s):\nLinux example /symphony/cpx/customer/logs\nWindows example c:\\users\\user\\desktop\\logs\n> ')
+        logpath = logpath+'/'
+        logpath = logpath.replace('\\', '/')    
+        if os.path.exists(logpath):break
+        else:
+            clear()
+            print('\nThe path \''+logpath+'\'\ndoes not appear to be valid, please try again\n')
+    while True:        
+        combinedlog = 0
+        logcount = 0
+        for x in range (1, 101):
+            slp = logpath+'symphony-commproxy-'+str(x)+'.log'
+            if os.path.exists(slp):logcount += 1
+        if os.path.exists(logpath+'symphony-commproxy.log'):logcount += 1
+        if os.path.exists(logpath+logname):combinedlog += 1
+        print('\nThe directory \''+logpath+'\' contains:\n')
+        print(str(len([entry for entry in os.listdir(logpath) if os.path.isfile(os.path.join(logpath, entry))]))+'\tfiles')
+        print(str(combinedlog)+'\tpre-existing z.combined.log files')
+        print(str(logcount)+'\tsymphony-commproxy*.log files')
+        print('\nPick an option from the choices below')
+        print('\n1: Work with any single log/text file')
+        print('2: Work with a pre-existing z.combined.log file')
+        print('3: Work with all the symphony-commproxy*.log files (this will create a new \'z.combined.log\' file)')
+        print('4: Change working directory')
+        logtypeq = input('\nEnter the corresponding number :\n> ')   
+        clear() 
+        if logtypeq == '1':
+            while True:
+                logname = input('\nEnter the file name of the log file:\n> ')
+                if os.path.exists(logpath+logname):
+                    Lines = readlog(logpath+logname)               
+                    break
+                else:print('\n\''+logpath+logname+'\' not found...')
+            break
+        elif logtypeq == '2':
+            logname = 'z.combined.log'
+            if os.path.exists(logpath+logname):
+                if os.path.exists(logpath+logname):
+                    print('Reading : '+logpath+logname)
+                    Lines = readlog(logpath+logname)
+                break
+            else:
+                clear()
+                print('\n\''+logpath+logname+'\' not found...')            
+        elif logtypeq == '3':
+            if logcount > 0:
+                while True:
+                    csymplogfileexists = 0
+                    with open(logpath+logname, 'w') as f:f.write('')
+                    logcount = 0
+                    teststring = ''
+                    for x in range (0, 101):
+                        teststring = logpath+'symphony-commproxy-'+str(x)+'.log'
+                        if os.path.exists(teststring):
+                            print('Reading : '+teststring)
+                            listtowrite = readfile(teststring)
+                            writefile(logpath+logname,listtowrite,teststring,1,'a',1) 
+                            logcount += 1
+                    if os.path.exists(logpath+'symphony-commproxy.log'):
+                        print('Reading : '+logpath+'symphony-commproxy.log')
+                        listtowrite = readfile(logpath+'symphony-commproxy.log')
+                        writefile(logpath+logname,listtowrite,logpath+'symphony-commproxy.log',1,'a',1)            
+                        logcount += 1                        
+                    if logcount > 0:break           
+                    else:print('\''+logpath+'\' directory not found on this system\nPlease try again')
+                if csymplogfileexists == 0:print('A single log file has been created with all the log files concatenated in order\nIt is located at \''+logpath+logname+'\'')
+                Lines = readlog(logpath+logname)
+                break
+            else:print('\nNo symphony-commproxy*.log files found in this directory...')
+        elif logtypeq == '4':
+                    while True:
+                        logpath = input('\nEnter the absolute path to the directory which contains the log file(s):\nLinux example /symphony/cpx/customer/logs\nWindows example c:\\users\\user\\desktop\\logs\n> ')
+                        logpath = logpath+'/'
+                        logpath = logpath.replace('\\', '/')    
+                        if os.path.exists(logpath):break
+                        else:
+                            clear()
+                            print('\nThe path \''+logpath+'\'\ndoes not appear to be valid, please try again\n')
+    return (logname, logpath, Lines)
+
+def resultmenu(rlist, q4v=0):
+    while True:
+            print('Pick from the options below\n')
+            print('1: Back to previous menu')
+            print('2: Save the results to a file')
+            print('3: View the results in a text editor  (you will still have the option to save it after)')
+            if q4v == 1:print('4: Refine Search')
+            q = input('>')
+            if q == '1':
+                break            
+            if q == '2':
+                writefile(logpath+'z.temp.log',rlist)
+                renamefile('z.temp.log')                
+            if q == '3':
+                displayresult(rlist)
+            if q4v == 1:
+                if q == '4':                    
+                    return 'refine'
 ###################################################################################################
 ###                                     Main() starts here:                                     ###
 ###################################################################################################
@@ -280,103 +399,25 @@ todatetimestring = ''
 casesetting = 'Insensitive'
 caseselected = 0
 Lines = []
-logname = 'z.combined.log'
 
+logname, logpath, Lines = specifylogs()
+retry = 0
 while True:
-    logpath = input('\nEnter the absolute path to the directory which contains the log file(s):\nLinux example /symphony/cpx/customer/logs\nWindows example c:\\users\\user\\desktop\\logs\n> ')
-    logpath = logpath+'/'
-    logpath = logpath.replace('\\', '/')    
-    if os.path.exists(logpath):break
-    else:
-        clear()
-        print('\nThe path \''+logpath+'\'\ndoes not appear to be valid, please try again\n')
-while True:
-    combinedlog = 0
-    logcount = 0
-    for x in range (1, 101):
-        slp = logpath+'symphony-commproxy-'+str(x)+'.log'
-        if os.path.exists(slp):logcount += 1
-    if os.path.exists(logpath+'symphony-commproxy.log'):logcount += 1
-    if os.path.exists(logpath+logname):combinedlog += 1
-    print('\nThe directory \''+logpath+'\' contains:\n')
-    print(str(len([entry for entry in os.listdir(logpath) if os.path.isfile(os.path.join(logpath, entry))]))+'\tfiles')
-    print(str(combinedlog)+'\tpre-existing z.combined.log files')
-    print(str(logcount)+'\tsymphony-commproxy*.log files')
-    print('\nPick an option from the choices below')
-    print('\n1: Work with any single log/text file')
-    print('2: Work with a pre-existing z.combined.log file')
-    print('3: Work with all the symphony-commproxy*.log files (this will create a new \'z.combined.log\' file)')
-    print('4: Change working directory')
-    logtypeq = input('\nEnter the corresponding number :\n> ')   
-    clear() 
-    if logtypeq == '1':
-        while True:
-            logname = input('\nEnter the file name of the log file:\n> ')
-            if os.path.exists(logpath+logname):
-                Lines = readlog(logpath+logname)               
-                break
-            else:print('\n\''+logpath+logname+'\' not found...')
-        break
-    elif logtypeq == '2':
-        logname = 'z.combined.log'
-        if os.path.exists(logpath+logname):
-            if os.path.exists(logpath+logname):
-                print('Reading : '+logpath+logname)
-                Lines = readlog(logpath+logname)
-            break
-        else:
-            clear()
-            print('\n\''+logpath+logname+'\' not found...')            
-    elif logtypeq == '3':
-        if logcount > 0:
-            while True:
-                filestowork = 0
-                csymplogfileexists = 0
-                with open(logpath+logname, 'w') as f:f.write('')
-                filestowork = 1
-                logcount = 0
-                teststring = ''
-                for x in range (0, 101):
-                    teststring = logpath+'symphony-commproxy-'+str(x)+'.log'
-                    if os.path.exists(teststring):
-                        print('Reading : '+teststring)
-                        listtowrite = readfile(teststring)
-                        writefile(logpath+logname,listtowrite,teststring,1,'a',1) 
-                        logcount += 1
-                if os.path.exists(logpath+'symphony-commproxy.log'):
-                    print('Reading : '+logpath+'symphony-commproxy.log')
-                    listtowrite = readfile(logpath+'symphony-commproxy.log')
-                    writefile(logpath+logname,listtowrite,logpath+'symphony-commproxy.log',1,'a',1)            
-                    logcount += 1                        
-                if logcount > 0:break           
-                else:print('\''+logpath+'\' directory not found on this system\nPlease try again')
-            if csymplogfileexists == 0:print('A single log file has been created with all the log files concatenated in order\nIt is located at \''+logpath+logname+'\'')
-            Lines = readlog(logpath+logname)
-            break
-        else:print('\nNo symphony-commproxy*.log files found in this directory...')
-    elif logtypeq == '4':
-                while True:
-                    logpath = input('\nEnter the absolute path to the directory which contains the log file(s):\nLinux example /symphony/cpx/customer/logs\nWindows example c:\\users\\user\\desktop\\logs\n> ')
-                    logpath = logpath+'/'
-                    logpath = logpath.replace('\\', '/')    
-                    if os.path.exists(logpath):break
-                    else:
-                        clear()
-                        print('\nThe path \''+logpath+'\'\ndoes not appear to be valid, please try again\n')    
-while True:
-    print('\nPick an option from the choices below\n')
-    print('1: Quit')
-    if fromdatetimestring != '':
-        print('2: Date/time   (change/clear settings) \n   Currently configured search window:\n   From : '+str(fdt))
-        if todatetimestring != '':print('   To   : '+str(tdt))
-        else:print('   To   : End of log')
-    else:print('2: Date/time   (Specify a time range to search in (optional))')
-    print('3: Log select  (Currently selected file: \''+logpath+logname+'\')')
-    print('4: Err & Warn  (Preconfigured reports for Errors and Warnings in CPX logs)')
-    print('5: Latency     (Latency over provided threshold report (for: \'duration =\') in CPX logs)')
-    print('6: Latency     (Latency over provided threshold report (for: \'Delivery cycle process time:\') in CPX logs)')
-    print('7: Custom      (Display the 1, 2 or 3 string AND/OR/NOT search menu)')
-    mainmenuq = input('\nEnter the corresponding number :\n> ')
+    if retry == 0:
+        print('\nPick an option from the choices below\n')
+        print('1: Quit')
+        if fromdatetimestring != '':
+            print('2: Date/time   (change/clear settings) \n   Currently configured search window:\n   From : '+str(fdt))
+            if todatetimestring != '':print('   To   : '+str(tdt))
+            else:print('   To   : End of log')
+        else:print('2: Date/time   (Specify a time range to search in (optional))')
+        print('3: Log select  (Currently selected file: \''+logpath+logname+'\')')
+        print('4: Err & Warn  (Preconfigured reports for Errors and Warnings in CPX logs)')
+        print('5: Latency     (Latency over provided threshold report (for: \'duration =\') in CPX logs)')
+        print('6: Latency     (Latency over provided threshold report (for: \'Delivery cycle process time:\') in CPX logs)')
+        print('7: Custom      (Display the 1, 2 or 3 string AND/OR/NOT search menu)')
+        mainmenuq = input('\nEnter the corresponding number :\n> ')
+    else: retry = 0
     clear()
     start = time.time()
     if mainmenuq == '1':break
@@ -490,40 +531,46 @@ while True:
                         print('\nThe path \''+logpath+'\'\ndoes not appear to be valid, please try again\n')
         clear()
     elif mainmenuq == '4':
+        retry = 0
         while True:
-            print('\nPick an option from the choices below (applied per log line)\n')
-            print('1: Back to main search menu')
-            print('2: Warnings  (Warning lines only)')
-            print('3: Warnings  (Unique Warnings report)')
-            print('4: Errors    (Error lines only)')
-            print('5: Errors    (Unique Errors report)')
-            print('6: Errors    (Full Error stacks (ignores date/time settings))')
-            errorwarnmenuq = input('\nEnter the corresponding number :\n> ')
+            if retry == 0:
+                print('\nPick an option from the choices below (applied per log line)\n')
+                print('1: Back to main search menu')
+                print('2: Warnings  (Warning lines only)')
+                print('3: Warnings  (Unique Warnings report)')
+                print('4: Errors    (Error lines only)')
+                print('5: Errors    (Unique Errors report)')
+                print('6: Errors    (Full Error stacks (ignores date/time settings))')
+                errorwarnmenuq = input('\nEnter the corresponding number :\n> ')
+            else: retry = 0                
             clear()
             if errorwarnmenuq == '1':
                 clear()
                 break
             elif errorwarnmenuq == '2':
                 print('Creating Warning list log')
-                customsearch(' WARN ',1,Lines,1)
-            elif errorwarnmenuq == '3':summary('warning')
+                resultmenu(customsearch(' WARN ',1,Lines,1))
+            elif errorwarnmenuq == '3':resultmenu(resultlist = summary('WARN'))
             elif errorwarnmenuq == '4':
                 print('Creating short Error list log')
-                customsearch(' ERROR ',1,Lines,1)
-            elif errorwarnmenuq == '5':summary('error')
-            elif errorwarnmenuq == '6':geterrorstacks()
+                resultmenu(customsearch(' ERROR ',1,Lines,1))
+            elif errorwarnmenuq == '5':resultmenu(summary('ERROR'))
+            elif errorwarnmenuq == '6':resultmenu(geterrorstacks())
+        clear()
     elif mainmenuq == '5':
         while True:
             print('Enter the minimum latency for the report (ms)')
             ping = getlatency(input('>')+'ms',0)        
             if ping.isdigit():break
-        latencyreport(Lines,ping,'duration = ')
+        if resultmenu(latencyreport(Lines,ping,'duration = '), 1) == 'refine':retry = 1
+        clear()
     elif mainmenuq == '6':
         while True:
             print('Enter the minimum latency for the report (ms)')
             ping = getlatency(input('>')+' ms',1)        
             if ping.isdigit():break
-        latencyreport(Lines,ping,'Delivery cycle process time: ')
+        if resultmenu(latencyreport(Lines,ping,'Delivery cycle process time: '), 1) == 'refine':retry = 1
+        clear()
     elif mainmenuq == '7':
         clear()
         while True:
@@ -544,15 +591,18 @@ while True:
                 else: caseselected = 1                
             elif custommenuq == '3':
                 searchterm = input('Enter the string to search for :\n> ')
-                customsearch(searchterm,1,Lines,caseselected)
-            elif custommenuq == '4': 
-                while True:                    
-                    print('\nPick an option from the choices below (logic applied per log line)\n')
-                    print('1: Back to the previous menu')
-                    print('2: Match string-x AND string-y')
-                    print('3: Match string-x OR string-y')
-                    print('4: Match string-x AND NOT string-y')
-                    siicustommenuq = input('\nEnter the corresponding number :\n> ')
+                resultmenu(customsearch(searchterm,1,Lines,caseselected))
+            elif custommenuq == '4':
+                retry = 0
+                while True:
+                    if retry == 0:                 
+                        print('\nPick an option from the choices below (logic applied per log line)\n')
+                        print('1: Back to the previous menu')
+                        print('2: Match string-x AND string-y')
+                        print('3: Match string-x OR string-y')
+                        print('4: Match string-x AND NOT string-y')
+                        siicustommenuq = input('\nEnter the corresponding number :\n> ')
+                    else: retry = 0
                     clear()
                     if siicustommenuq == '1':
                         break
@@ -560,29 +610,33 @@ while True:
                         print('Search type : x AND y')
                         x = input('Enter the \'x\' string value :\n> ')
                         y = input('Enter the \'y\' string value :\n> ')
-                        customsearch(x,3,Lines,caseselected,y)
+                        if resultmenu(customsearch(x,3,Lines,caseselected,y), 1) == 'refine':retry = 1
                     elif siicustommenuq == '3':
                         print('Search type : x OR y')
                         x = input('Enter the \'x\' string value :\n> ')
                         y = input('Enter the \'y\' string value :\n> ')
-                        customsearch(x,4,Lines,caseselected,y)
+                        if resultmenu(customsearch(x,4,Lines,caseselected,y), 1) == 'refine':retry = 1
                     elif siicustommenuq == '4':
                         print('Search type : x AND NOT y')
                         x = input('Enter the \'x\' string value :\n> ')
                         y = input('Enter the \'y\' string value :\n> ')
-                        customsearch(x,2,Lines,caseselected,y)
+                        if resultmenu(customsearch(x,2,Lines,caseselected,y), 1) == 'refine':retry = 1
+                    clear()
             elif custommenuq == '5':
-                clear() 
+                clear()
+                retry = 0
                 while True:
-                    print('\nPick an option from the choices below (logic applied per log line)\n')
-                    print('1: Back to the previous menu')
-                    print('2: Match string-x AND string-y AND string-z')
-                    print('3: Match string-x AND string-y OR string-z')
-                    print('4: Match string-x AND string-y AND NOT string-z')
-                    print('5: Match string-x OR string-y OR string-z')
-                    print('6: Match string-x OR string-y AND NOT string-z')
-                    print('7: Match string-x AND NOT string-y AND NOT string-z')                    
-                    siiicustommenuq = input('\nEnter the corresponding number :\n> ')
+                    if retry == 0:
+                        print('\nPick an option from the choices below (logic applied per log line)\n')
+                        print('1: Back to the previous menu')
+                        print('2: Match string-x AND string-y AND string-z')
+                        print('3: Match string-x AND string-y OR string-z')
+                        print('4: Match string-x AND string-y AND NOT string-z')
+                        print('5: Match string-x OR string-y OR string-z')
+                        print('6: Match string-x OR string-y AND NOT string-z')
+                        print('7: Match string-x AND NOT string-y AND NOT string-z')                    
+                        siiicustommenuq = input('\nEnter the corresponding number :\n> ')
+                    else:retry = 0
                     clear()                    
                     if siiicustommenuq == '1':
                         clear()
@@ -592,36 +646,37 @@ while True:
                         x = input('Enter the \'x\' string value :\n> ')
                         y = input('Enter the \'y\' string value :\n> ')
                         z = input('Enter the \'z\' string value :\n> ')
-                        customsearch(x,5,Lines,caseselected,y,z)
+                        if resultmenu(customsearch(x,5,Lines,caseselected,y,z), 1) == 'refine':retry = 1
                     elif siiicustommenuq == '3':
                         print('Search type : x AND (y OR z)')
                         x = input('Enter the \'x\' string value :\n> ')
                         y = input('Enter the \'y\' string value :\n> ')
                         z = input('Enter the \'z\' string value :\n> ')
-                        customsearch(x,6,Lines,caseselected,y,z)
+                        if resultmenu(customsearch(x,6,Lines,caseselected,y,z), 1) == 'refine':retry = 1
                     elif siiicustommenuq == '4':
                         print('Search type : x AND y AND NOT z')
                         x = input('Enter the \'x\' string value :\n> ')
                         y = input('Enter the \'y\' string value :\n> ')
                         z = input('Enter the \'z\' string value :\n> ')
-                        customsearch(x,7,Lines,caseselected,y,z)
+                        if resultmenu(customsearch(x,7,Lines,caseselected,y,z), 1) == 'refine':retry = 1
                     elif siiicustommenuq == '5':
                         print('Search type : x OR y OR z')
                         x = input('Enter the \'x\' string value :\n> ')
                         y = input('Enter the \'y\' string value :\n> ')
                         z = input('Enter the \'z\' string value :\n> ')
-                        customsearch(x,8,Lines,caseselected,y,z)
+                        if resultmenu(customsearch(x,8,Lines,caseselected,y,z), 1) == 'refine':retry = 1
                     elif siiicustommenuq == '6':
                         print('Search type : (x OR y) AND NOT z')
                         x = input('Enter the \'x\' string value :\n> ')
                         y = input('Enter the \'y\' string value :\n> ')
                         z = input('Enter the \'z\' string value :\n> ')
-                        customsearch(x,9,Lines,caseselected,y,z)
+                        if resultmenu(customsearch(x,9,Lines,caseselected,y,z), 1) == 'refine':retry = 1
                     elif siiicustommenuq == '7':
                         print('Search type : x AND NOT y AND NOT z')
                         x = input('Enter the \'x\' string value :\n> ')
                         y = input('Enter the \'y\' string value :\n> ')
                         z = input('Enter the \'z\' string value :\n> ')
-                        customsearch(x,10,Lines,caseselected,y,z)                    
+                        if resultmenu(customsearch(x,10,Lines,caseselected,y,z), 1) == 'refine':retry = 1
+                    clear()
                 clear()
         clear()
