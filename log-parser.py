@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import platform, subprocess, uuid
+import platform, subprocess, uuid, glob
 import time
 from datetime import datetime
 import os
@@ -15,6 +15,11 @@ def clear():
         os.system('cls')
     else: # Assume Linux / Mac
         os.system('clear')
+
+def countfiles(logpath):
+    log = glob.glob(logpath+'*.log')
+    txt = glob.glob(logpath+'*.txt')    
+    return (log, txt)
 
 def readfile(inputpath):
     strlist = []
@@ -39,20 +44,51 @@ def renamefile(tfname):
                 print('File successfully saved as: '+logpath+'z.'+fname+'.log')
                 break
             except:print('Failed to save, check that only valid filename characters are being entered and try again.')
-    
+
+def getfilelist(logpath):
+    listofnames = []
+    listofext = []
+    plist = []
+    finallist = []
+    fflist = []
+    for file in os.listdir(logpath):
+        fflist += [file]
+        tempstring = ''        
+        for x in file:
+            if x.isalpha() or x == '-' or x == '_':
+                tempstring += x
+            elif x == '.':
+                if not tempstring in listofnames:
+                    if tempstring[-1:] == '-':tempstring = tempstring[:-1]
+                    if not tempstring in listofnames:
+                        listofnames += [tempstring]
+                        listofext += [file[-4:]]
+                break    
+
+    for n in range (0, len(listofnames)):        
+        plist += [listofnames[n]+'*'+listofext[n]]
+
+    for names in plist:
+        count = 0
+        for file in os.listdir(logpath):
+            if names[0:-5] in file:
+                count += 1
+        finallist += [str(count)+'\tfiles of type: '+names]
+    return (fflist, plist, listofnames, finallist)
+              
 def displayresult(stringlist):
     fname = str(uuid.uuid4())
-    winapps = ['C:\\Program Files\\Notepad++\\notepad++.exe', 'C:\\Program Files (x86)\\Notepad++\\notepad++.exe', 'C:\\Windows\\System32\\notepad.exe']
+    winapps = ['C:\\Program Files\\Notepad++\\notepad++.exe', 'C:\\Program Files (x86)\\Notepad++\\notepad++.exe', 'C:\\Windows\\System32\\notepad.exe'] # From preferred to least preferred
     with open(logpath+'z.'+fname+'.log', 'w') as f:
         for line in stringlist:
             f.write(line)
     v1 = ''
-    if ostest[0] == 'W':
+    if ostest[0] == 'W': # Windows
         for app in winapps:
             if os.path.exists(app):
                 v1 = app
                 break
-    elif ostest[0] == 'L':
+    elif ostest[0] == 'L': # Linux
         if os.path.isfile('/usr/bin/vim'):
             v1 = 'vim'
         elif os.path.isfile('/usr/bin/nano'):
@@ -62,7 +98,9 @@ def displayresult(stringlist):
       
     if os.path.exists(logpath+'z.'+fname+'.log'):
         if v1 != '':subprocess.call([v1, v2])        
-        elif ostest[0] == 'D':subprocess.run(['open', '-a', 'Terminal', '-n', 'vim', v2]) # This method of opening vim in a new Mac terminal window with pre-loaded content is untested
+        elif ostest[0] == 'D':subprocess.run(['open', '-a', 'Terminal', '-n', 'vim', v2]) # Mac (D for Darwin) 
+        #The above method of opening vim in a new Mac terminal window with pre-loaded content is untested
+        #I figurd VIM would be useful as you can do ':set nowrap' and search with '/'
         os.remove(logpath+'z.'+fname+'.log')
         
 
@@ -225,7 +263,6 @@ def geterrorstacks():
                 errfound = 1
                 errorwarnlist+=['\n##########################################################################################################################################\n\n'+line]
         elif errfound == 1:errorwarnlist+=[line]
-    #writefile(logpath+'z.error-stacks.log',errorwarnlist)
     end = time.time()
     print('Operation completed in '+str(end - start)[:4]+' seconds\n\n')
     return errorwarnlist
@@ -280,8 +317,8 @@ def latencyreport(list,limit,type):
                         resultlist+=[line]
                         matchcount += 1
         end = time.time()
-        print('Operation completed in '+str(end - start)[:4]+' seconds\n\n')
-        print('Found '+str(matchcount)+' latencies over '+str(limit)+'ms')
+        print('Operation completed in '+str(end - start)[:4]+' seconds\n')
+        print('Found '+str(matchcount)+' latencies over '+str(limit)+'ms\n')
         return resultlist
 
 def specifylogs():
@@ -304,21 +341,47 @@ def specifylogs():
         if os.path.exists(logpath+'symphony-commproxy.log'):logcount += 1
         if os.path.exists(logpath+logname):combinedlog += 1
         print('\nThe directory \''+logpath+'\' contains:\n')
-        print(str(len([entry for entry in os.listdir(logpath) if os.path.isfile(os.path.join(logpath, entry))]))+'\tfiles')
-        print(str(combinedlog)+'\tpre-existing z.combined.log files')
-        print(str(logcount)+'\tsymphony-commproxy*.log files')
+        print(str(len([entry for entry in os.listdir(logpath) if os.path.isfile(os.path.join(logpath, entry))]))+'\tfiles in total\n')
+
+        fnlist, nameandext, nameonly = getfilelist(logpath)
+        for names in fnlist:
+            print(names)
+        if combinedlog > 0:
+            addstring = '  (the file exists)'
+        else:
+            addstring = '  (the file doesn\'t exist)'
         print('\nPick an option from the choices below')
         print('\n1: Work with any single log/text file')
-        print('2: Work with a pre-existing z.combined.log file')
-        print('3: Work with all the symphony-commproxy*.log files (this will create a new \'z.combined.log\' file)')
-        print('4: Change working directory')
-        logtypeq = input('\nEnter the corresponding number :\n> ')   
-        clear() 
-        if logtypeq == '1':
+        print('2: Work with a pre-existing z.combined.log file'+addstring)
+
+        print('5: Change working directory')
+        v1, v2, v3, v4 = getfilelist(logpath)
+
+        print('\nPick an option from the choices below\n')
+        print('1: Back to previous menu')
+        print('2: All .log and .txt files in the directory')
+        print('3: All files in the folder')
+        for names in nameandext:
+            print(str(logscount)+': All files of type: '+names)
+            logscount += 1
+        res = input('\nEnter the corresponding number :\n> ')
+
+        logtypeq = input('\nEnter the corresponding number :\n> ')
+        clear()
+        if logtypeq == '1': # Change directory
+                    while True:
+                        logpath = input('\nEnter the absolute path to the directory which contains the log file(s):\nLinux example /symphony/cpx/customer/logs\nWindows example c:\\users\\user\\desktop\\logs\n> ')
+                        logpath = logpath+'/'
+                        logpath = logpath.replace('\\', '/')    
+                        if os.path.exists(logpath):break
+                        else:
+                            clear()
+                            print('\nThe path \''+logpath+'\'\ndoes not appear to be valid, please try again\n')
+        elif logtypeq == '2': # Specify a single log
             while True:
                 logname = input('\nEnter the file name of the log file:\n> ')
                 if os.path.exists(logpath+logname):
-                    Lines = readlog(logpath+logname)               
+                    Lines = readlog(logpath+logname)
                     break
                 else:print('\n\''+logpath+logname+'\' not found...')
             break
@@ -358,34 +421,40 @@ def specifylogs():
                 break
             else:print('\nNo symphony-commproxy*.log files found in this directory...')
         elif logtypeq == '4':
-                    while True:
-                        logpath = input('\nEnter the absolute path to the directory which contains the log file(s):\nLinux example /symphony/cpx/customer/logs\nWindows example c:\\users\\user\\desktop\\logs\n> ')
-                        logpath = logpath+'/'
-                        logpath = logpath.replace('\\', '/')    
-                        if os.path.exists(logpath):break
-                        else:
-                            clear()
-                            print('\nThe path \''+logpath+'\'\ndoes not appear to be valid, please try again\n')
+            clear()
+            while True:pass 
+
+
+############################################################
+############################################################
+############################################################
+############################################################
+############################################################
+
     return (logname, logpath, Lines)
 
 def resultmenu(rlist, q4v=0):
     while True:
-            print('Pick from the options below\n')
-            print('1: Back to previous menu')
-            print('2: Save the results to a file')
-            print('3: View the results in a text editor  (you will still have the option to save it after)')
-            if q4v == 1:print('4: Refine Search')
-            q = input('>')
-            if q == '1':
-                break            
-            if q == '2':
-                writefile(logpath+'z.temp.log',rlist)
-                renamefile('z.temp.log')                
-            if q == '3':
-                displayresult(rlist)
-            if q4v == 1:
-                if q == '4':                    
-                    return 'refine'
+        print('Pick from the options below\n')
+        print('1: Back to previous menu')
+        print('2: Save the results to a file')
+        print('3: View the results in a text editor  (you will still have the option to save it after)')
+        if q4v == 1:print('4: Refine Search')
+        q = input('>')
+        if q == '1':
+            clear()
+            break            
+        if q == '2':
+            writefile(logpath+'z.temp.log',rlist)
+            renamefile('z.temp.log')                
+        if q == '3':
+            displayresult(rlist)
+        if q4v == 1:
+            if q == '4':
+                clear()                  
+                return 'refine'
+        clear()
+
 ###################################################################################################
 ###                                     Main() starts here:                                     ###
 ###################################################################################################
