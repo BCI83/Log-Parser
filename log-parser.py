@@ -88,7 +88,7 @@ def displayresult(stringlist):
                 v1 = app
                 break
     elif ostest[0] == 'L': # Linux
-    #elif ostest[0] == 'L' or ostest[0] == 'D': # Linux and Mac
+    #else: # Linux and Mac
         if os.path.isfile('/usr/bin/vim'):
             v1 = 'vim'
         elif os.path.isfile('/usr/bin/nano'):
@@ -97,8 +97,14 @@ def displayresult(stringlist):
     v2 = logpath+'z.'+fname+'.log'
       
     if os.path.exists(logpath+'z.'+fname+'.log'):
-        if v1 != '':subprocess.call([v1, v2])        
+        if v1 != '':
+            if ostest[0] == 'W':
+                subprocess.call([v1, v2])
+            else:
+                if v1 == 'vim':subprocess.call([v1, '-c', 'set nowrap', v2])
+                else:subprocess.call([v1, v2])
         elif ostest[0] == 'D':subprocess.run(['open', '-a', 'Terminal', '-n', 'vim', v2]) # Mac (D for Darwin)
+        elif ostest[0] == 'D':subprocess.run(['open', '-a', 'Terminal', '-n', 'vim', '-c', 'set nowrap', v2]) # Mac (D for Darwin) (may set nowrap automatically in vim)
         os.remove(logpath+'z.'+fname+'.log')
 
         ##################################################################################################################################################
