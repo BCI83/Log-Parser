@@ -48,33 +48,34 @@ def renamefile(tfname):
 def getfilelist(logpath):
     listofnames = []
     listofext = []
-    plist = []
+    nameandext = []
     finallist = []
-    fflist = []
+    fullfilelist = []
     for file in os.listdir(logpath):
-        fflist += [file]
+        fullfilelist += [file]
         tempstring = ''        
         for x in file:
-            if x.isalpha() or x == '-' or x == '_':
+            if x.isalpha() or x == '-' or x == '_' or tempstring == 'z':
                 tempstring += x
             elif x == '.':
-                if not tempstring in listofnames:
-                    if tempstring[-1:] == '-':tempstring = tempstring[:-1]
+                if not tempstring == 'z':
                     if not tempstring in listofnames:
-                        listofnames += [tempstring]
-                        listofext += [file[-4:]]
-                break    
+                        if tempstring[-1:] == '-':tempstring = tempstring[:-1]
+                        if not tempstring in listofnames:
+                            listofnames += [tempstring]
+                            listofext += [file[-4:]]
+                    break    
 
     for n in range (0, len(listofnames)):        
-        plist += [listofnames[n]+'*'+listofext[n]]
-
-    for names in plist:
+        nameandext += [listofnames[n]+'*'+listofext[n]]
+    for names in nameandext:
         count = 0
         for file in os.listdir(logpath):
-            if names[0:-5] in file:
-                count += 1
+            if names[0:-5] == file[:len(names[0:-5])]:
+                if file[len(names[:-5]):len(names[:-4])] == '.' or file[len(names[:-5]):len(names[:-4])] == '-':
+                    count += 1
         finallist += [str(count)+'\tfiles of type: '+names]
-    return (fflist, plist, listofnames, finallist)
+    return (fullfilelist, nameandext, listofnames, finallist)
               
 def displayresult(stringlist):
     fname = str(uuid.uuid4())
@@ -98,19 +99,21 @@ def displayresult(stringlist):
       
     if os.path.exists(logpath+'z.'+fname+'.log'):
         if v1 != '':subprocess.call([v1, v2])        
-        elif ostest[0] == 'D':subprocess.run(['open', '-a', 'Terminal', '-n', 'vim', v2]) # Mac (D for Darwin) 
-        #The above method of opening vim in a new Mac terminal window with pre-loaded content is untested
-        #I figurd VIM would be useful as you can do ':set nowrap' and search with '/'
+        elif ostest[0] == 'D':subprocess.run(['open', '-a', 'Terminal', '-n', 'vim', v2]) # Mac (D for Darwin)
         os.remove(logpath+'z.'+fname+'.log')
-        
 
+        ##################################################################################################################################################
+        ################         The above method of opening vim in a new Mac terminal window with pre-loaded content is untested         ################
+        ################                   I figurd VIM would be useful as you can do ':set nowrap' and search with '/'                   ################
+        ##################################################################################################################################################
+    
 def readlog(path):    
     start = time.time()
     Linelist = []    
     print('Reading the log file into memory...')
     Linelist = readfile(path)
     end = time.time()            
-    print(str(len(Linelist))+' log lines read in '+str(end - start)[:4]+' seconds\n')
+    print(str(len(Linelist))+' log lines read in '+str(end - start)[:4]+' seconds')
     return Linelist
 
 def customsearch(searchw1,searchtype,list,cs,searchw2='',searchw3=''):
@@ -321,17 +324,47 @@ def latencyreport(list,limit,type):
         print('Found '+str(matchcount)+' latencies over '+str(limit)+'ms\n')
         return resultlist
 
-def specifylogs():
-    logname = 'z.combined.log'
-    Lines = []
+def getmultiplelogs(logpath,mlogname):
     while True:
-        logpath = input('\nEnter the absolute path to the directory which contains the log file(s):\nLinux example /symphony/cpx/customer/logs\nWindows example c:\\users\\user\\desktop\\logs\n> ')
-        logpath = logpath+'/'
-        logpath = logpath.replace('\\', '/')    
-        if os.path.exists(logpath):break
-        else:
-            clear()
-            print('\nThe path \''+logpath+'\'\ndoes not appear to be valid, please try again\n')
+        with open(logpath+'z.combined.log', 'w') as f:f.write('')
+        for file in os.listdir(logpath):
+
+            if file[:len(mlogname)] == mlogname:
+                if file[len(mlogname):len(mlogname)+1] == '.':
+                    print(file)
+        break
+    q = input('Hit Enter to continue...\n>')
+
+    '''listtowrite = readfile(logpath+file)
+        writefile(logpath+logname,listtowrite,file,1,'a',1)'''
+        #return List
+    
+def getmultiplesymphonylogs(logpath='',slogname=''):
+    symphonylogtype = slogname[9:]
+    while True:
+        with open(logpath+'z.combined.log', 'w') as f:f.write('')
+        logcount = 0
+        teststring = ''
+        for x in range (0, 101):
+            teststring = logpath+'symphony-'+symphonylogtype+'-'+str(x)+'.log'
+            if os.path.exists(teststring):
+                print('Reading : '+teststring)
+                listtowrite = readfile(teststring)
+                writefile(logpath+'z.combined.log',listtowrite,teststring,1,'a',1) 
+                logcount += 1
+        if os.path.exists(logpath+'symphony-'+symphonylogtype+'.log'):
+            print('Reading : '+logpath+'symphony-'+symphonylogtype+'.log')
+            listtowrite = readfile(logpath+'symphony-'+symphonylogtype+'.log')
+            writefile(logpath+'z.combined.log',listtowrite,logpath+'symphony-'+symphonylogtype+'.log',1,'a',1)            
+            logcount += 1
+        clear()      
+        print('A single log file has been created with all the log files concatenated in order\nIt is located at \''+logpath+'z.combined.log'+'\'')
+        Lines = readlog(logpath+'z.combined.log')        
+        return Lines
+
+def specifylogs(logpath):
+    logname = 'z.combined.log'    
+    Lines = []    
     while True:        
         combinedlog = 0
         logcount = 0
@@ -341,34 +374,32 @@ def specifylogs():
         if os.path.exists(logpath+'symphony-commproxy.log'):logcount += 1
         if os.path.exists(logpath+logname):combinedlog += 1
         print('\nThe directory \''+logpath+'\' contains:\n')
-        print(str(len([entry for entry in os.listdir(logpath) if os.path.isfile(os.path.join(logpath, entry))]))+'\tfiles in total\n')
 
-        fnlist, nameandext, nameonly = getfilelist(logpath)
-        for names in fnlist:
+        print(str(len([entry for entry in os.listdir(logpath)]))+'\tfiles in total\n')
+        # return (fullfilelist, nameandext, listofnames, finallist)
+        fullfilelist, nameandext, listofnames, finallist = getfilelist(logpath)
+        for names in finallist:
             print(names)
+        print('\nPick an option from the choices below\n(Options 5 and higher will overwrite or create a new z.combined.log file)\n')
+        print('1:  Quit / Back to previous menu')
+        print('2:  Change working directory')
+        print('3:  Specify a single file to work with')
+
         if combinedlog > 0:
-            addstring = '  (the file exists)'
+            print('4:  Work with the most recently created z.combined.log file')
         else:
-            addstring = '  (the file doesn\'t exist)'
-        print('\nPick an option from the choices below')
-        print('\n1: Work with any single log/text file')
-        print('2: Work with a pre-existing z.combined.log file'+addstring)
-
-        print('5: Change working directory')
-        v1, v2, v3, v4 = getfilelist(logpath)
-
-        print('\nPick an option from the choices below\n')
-        print('1: Back to previous menu')
-        print('2: All .log and .txt files in the directory')
-        print('3: All files in the folder')
-        for names in nameandext:
-            print(str(logscount)+': All files of type: '+names)
-            logscount += 1
-        res = input('\nEnter the corresponding number :\n> ')
-
+            print('4:  There is no pre-existing z.combined.log file in the directory (this option is disabled)')
+        menuoptionpos = 5
+        for names in nameandext: # generate options from 6 onwards
+            if names[0:2] == 'z.':pass
+            elif menuoptionpos < 10:print(str(menuoptionpos)+':  All files of type: '+names)
+            else: print(str(menuoptionpos)+': All files of type: '+names)
+            menuoptionpos += 1
         logtypeq = input('\nEnter the corresponding number :\n> ')
         clear()
-        if logtypeq == '1': # Change directory
+        if logtypeq == '1':break # back / quit
+
+        if logtypeq == '2': # change directory
                     while True:
                         logpath = input('\nEnter the absolute path to the directory which contains the log file(s):\nLinux example /symphony/cpx/customer/logs\nWindows example c:\\users\\user\\desktop\\logs\n> ')
                         logpath = logpath+'/'
@@ -377,7 +408,7 @@ def specifylogs():
                         else:
                             clear()
                             print('\nThe path \''+logpath+'\'\ndoes not appear to be valid, please try again\n')
-        elif logtypeq == '2': # Specify a single log
+        elif logtypeq == '3': # specify a single log
             while True:
                 logname = input('\nEnter the file name of the log file:\n> ')
                 if os.path.exists(logpath+logname):
@@ -385,7 +416,8 @@ def specifylogs():
                     break
                 else:print('\n\''+logpath+logname+'\' not found...')
             break
-        elif logtypeq == '2':
+                
+        elif logtypeq == '4': # work with pre-existing z.combined.log file
             logname = 'z.combined.log'
             if os.path.exists(logpath+logname):
                 if os.path.exists(logpath+logname):
@@ -394,43 +426,20 @@ def specifylogs():
                 break
             else:
                 clear()
-                print('\n\''+logpath+logname+'\' not found...')            
-        elif logtypeq == '3':
-            if logcount > 0:
-                while True:
-                    csymplogfileexists = 0
-                    with open(logpath+logname, 'w') as f:f.write('')
-                    logcount = 0
-                    teststring = ''
-                    for x in range (0, 101):
-                        teststring = logpath+'symphony-commproxy-'+str(x)+'.log'
-                        if os.path.exists(teststring):
-                            print('Reading : '+teststring)
-                            listtowrite = readfile(teststring)
-                            writefile(logpath+logname,listtowrite,teststring,1,'a',1) 
-                            logcount += 1
-                    if os.path.exists(logpath+'symphony-commproxy.log'):
-                        print('Reading : '+logpath+'symphony-commproxy.log')
-                        listtowrite = readfile(logpath+'symphony-commproxy.log')
-                        writefile(logpath+logname,listtowrite,logpath+'symphony-commproxy.log',1,'a',1)            
-                        logcount += 1                        
-                    if logcount > 0:break           
-                    else:print('\''+logpath+'\' directory not found on this system\nPlease try again')
-                if csymplogfileexists == 0:print('A single log file has been created with all the log files concatenated in order\nIt is located at \''+logpath+logname+'\'')
-                Lines = readlog(logpath+logname)
-                break
-            else:print('\nNo symphony-commproxy*.log files found in this directory...')
-        elif logtypeq == '4':
-            clear()
-            while True:pass 
-
-
-############################################################
-############################################################
-############################################################
-############################################################
-############################################################
-
+                print('\n********** \''+logpath+logname+'\' not found... **********')            
+        else:
+            try:
+                if int(logtypeq) > 4: # deal with the dynamically created options from 4 onwards
+                    menuoptionpos = 5
+                    for names in listofnames:
+                        if menuoptionpos == int(logtypeq):
+                            if names.lower()[:9] == 'symphony-': # read symphony-*.log files in order
+                                Lines = getmultiplesymphonylogs(logpath,names)
+                            else: # read specified files in order
+                                Lines = getmultiplelogs(logpath,names)
+                        menuoptionpos += 1
+            except:pass
+        if Lines != []:break         
     return (logname, logpath, Lines)
 
 def resultmenu(rlist, q4v=0):
@@ -455,6 +464,20 @@ def resultmenu(rlist, q4v=0):
                 return 'refine'
         clear()
 
+def specifylogbath():
+    while True:
+        logpath = input('\nEnter the absolute path to the directory which contains the log file(s):\nLinux example /symphony/cpx/customer/logs\nWindows example c:\\users\\user\\desktop\\logs\n> ')
+        if logpath[-1] == ' ':
+            logpath = logpath[:-1]
+        logpath = logpath+'/'
+        logpath = logpath.replace('\\', '/')    
+        if os.path.exists(logpath):
+            clear()
+            return logpath
+        else:
+            clear()
+            print('\nThe path \''+logpath+'\'\ndoes not appear to be valid, please try again\n')
+
 ###################################################################################################
 ###                                     Main() starts here:                                     ###
 ###################################################################################################
@@ -468,8 +491,8 @@ todatetimestring = ''
 casesetting = 'Insensitive'
 caseselected = 0
 Lines = []
-
-logname, logpath, Lines = specifylogs()
+logpath = specifylogbath()
+logname, logpath, Lines = specifylogs(logpath)
 retry = 0
 while True:
     if retry == 0:
@@ -480,7 +503,7 @@ while True:
             if todatetimestring != '':print('   To   : '+str(tdt))
             else:print('   To   : End of log')
         else:print('2: Date/time   (Specify a time range to search in (optional))')
-        print('3: Log select  (Currently selected file: \''+logpath+logname+'\')')
+        print('3: Log select  (Open the file/directory selection menu)')
         print('4: Err & Warn  (Preconfigured reports for Errors and Warnings in CPX logs)')
         print('5: Latency     (Latency over provided threshold report (for: \'duration =\') in CPX logs)')
         print('6: Latency     (Latency over provided threshold report (for: \'Delivery cycle process time:\') in CPX logs)')
@@ -543,62 +566,7 @@ while True:
         clear()
     elif mainmenuq == '3':
         clear()
-        while True:
-            combinedlog = 0
-            logcount = 0
-            for x in range (1, 101):
-                slp = logpath+'symphony-commproxy-'+str(x)+'.log'
-                if os.path.exists(slp):logcount += 1
-            if os.path.exists(logpath+'symphony-commproxy.log'):logcount += 1
-            if os.path.exists(logpath+logname):combinedlog += 1
-
-            print('\nThe directory \''+logpath+'\' contains:\n')
-            print(str(len([entry for entry in os.listdir(logpath) if os.path.isfile(os.path.join(logpath, entry))]))+'\tfiles')
-            print(str(combinedlog)+'\tpre-existing z.combined.log files')
-            print(str(logcount)+'\tsymphony-commproxy*.log files')
-
-            print('\nThe selected directory is: \''+logpath+'\'\nThe selected file is: \''+logname+'\'\n')
-            if os.path.exists(logpath+logname):print('The selected path and file combination is valid\n')
-            else:print('****** The selected path and file combination is not valid ******\n****** Please specify a path and file combination that is valid ******\n')
-
-            print('Pick an option from the choices below\n')
-            if os.path.exists(logpath+logname):print('1: Back to main search menu')
-            print('2: Load the full concatenated log file')
-            print('3: Specify a single log file to work with')
-            print('4: Change the working directory')
-            logselectmenuq = input('\nEnter the corresponding number :\n> ')
-            clear()
-            if logselectmenuq == '1':
-                if os.path.exists(logpath+logname):break
-            elif logselectmenuq == '2':
-                logname = "z.combined.log"
-                if os.path.exists(logpath+"z.combined.log"):
-                    Lines = readlog(logpath+"z.combined.log")
-                    break
-                else:print('There is no \'z.combined.log\' file in the path \''+logpath+'\'')
-            elif logselectmenuq == '3':
-                while True:
-                    logname = input('\nEnter the file name of the log file:\n> ')
-                    if os.path.exists(logpath+logname):
-                        Lines = readlog(logpath+logname)
-                        break
-                    else:
-                        clear()
-                        print('\n\''+logpath+logname+'\' not found...\n')
-                break
-            elif logselectmenuq == '4':
-                while True:
-                    logpath = input('\nEnter the absolute path to the directory which contains the log file(s):\nLinux example /symphony/cpx/customer/logs\nWindows example c:\\users\\user\\desktop\\logs\n> ')
-                    logpath = logpath+'/'
-                    logpath = logpath.replace('\\', '/')    
-                    if os.path.exists(logpath):
-                        if os.path.exists(logpath+logname):
-                            Lines = readlog(logpath+logname)
-                        break                        
-                    else:
-                        clear()
-                        print('\nThe path \''+logpath+'\'\ndoes not appear to be valid, please try again\n')
-        clear()
+        logname, logpath, Lines = specifylogs(logpath)
     elif mainmenuq == '4':
         retry = 0
         while True:
