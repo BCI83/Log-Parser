@@ -104,7 +104,7 @@ def displayresult(stringlist):
                 if v1 == 'vim':subprocess.call([v1, '-c', 'set nowrap', v2])
                 else:subprocess.call([v1, v2])
         elif ostest[0] == 'D':subprocess.run(['open', '-a', 'Terminal', '-n', 'vim', v2]) # Mac (D for Darwin)
-        elif ostest[0] == 'D':subprocess.run(['open', '-a', 'Terminal', '-n', 'vim', '-c', 'set nowrap', v2]) # Mac (D for Darwin) (may set nowrap automatically in vim)
+        #elif ostest[0] == 'D':subprocess.run(['open', '-a', 'Terminal', '-n', 'vim', '-c', 'set nowrap', v2]) # Mac (D for Darwin) (may set nowrap automatically in vim)
         os.remove(logpath+'z.'+fname+'.log')
 
         ##################################################################################################################################################
