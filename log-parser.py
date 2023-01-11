@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 
-import platform, subprocess, uuid, glob
-import time
+import platform, subprocess, uuid, glob, sys, time, os
 from datetime import datetime
-import os
 ostest = platform.platform()    
 
 ###################################################################################################
@@ -90,6 +88,7 @@ def displayresult(stringlist):
                 v1 = app
                 break
     elif ostest[0] == 'L': # Linux
+    #elif ostest[0] == 'L' or ostest[0] == 'D': # Linux and Mac
         if os.path.isfile('/usr/bin/vim'):
             v1 = 'vim'
         elif os.path.isfile('/usr/bin/nano'):
@@ -104,7 +103,7 @@ def displayresult(stringlist):
 
         ##################################################################################################################################################
         ################         The above method of opening vim in a new Mac terminal window with pre-loaded content is untested         ################
-        ################                   I figurd VIM would be useful as you can do ':set nowrap' and search with '/'                   ################
+        ################         I figurd VIM would be useful as you can do ':set nowrap' and search within the results with '/'          ################
         ##################################################################################################################################################
     
 def readlog(path):    
@@ -362,9 +361,9 @@ def getmultiplesymphonylogs(logpath='',slogname=''):
         Lines = readlog(logpath+'z.combined.log')        
         return Lines
 
-def specifylogs(logpath):
+def specifylogs(logpath,firstrun=0,Lines=[]):
     logname = 'z.combined.log'    
-    Lines = []    
+    #Lines = []    
     while True:        
         combinedlog = 0
         logcount = 0
@@ -381,7 +380,8 @@ def specifylogs(logpath):
         for names in finallist:
             print(names)
         print('\nPick an option from the choices below\n(Options 5 and higher will overwrite or create a new z.combined.log file)\n')
-        print('1:  Quit / Back to previous menu')
+        if firstrun == 0:print('1:  Back to previous menu')
+        else:print('1:  Quit')
         print('2:  Change working directory')
         print('3:  Specify a single file to work with')
 
@@ -397,26 +397,22 @@ def specifylogs(logpath):
             menuoptionpos += 1
         logtypeq = input('\nEnter the corresponding number :\n> ')
         clear()
-        if logtypeq == '1':break # back / quit
-
+        if logtypeq == '1':
+            if firstrun == 0:   
+                if Lines != []:break # back
+            else:sys.exit() # quit
         if logtypeq == '2': # change directory
-                    while True:
-                        logpath = input('\nEnter the absolute path to the directory which contains the log file(s):\nLinux example /symphony/cpx/customer/logs\nWindows example c:\\users\\user\\desktop\\logs\n> ')
-                        logpath = logpath+'/'
-                        logpath = logpath.replace('\\', '/')    
-                        if os.path.exists(logpath):break
-                        else:
-                            clear()
-                            print('\nThe path \''+logpath+'\'\ndoes not appear to be valid, please try again\n')
+            Lines = []
+            specifylogpath()
         elif logtypeq == '3': # specify a single log
             while True:
                 logname = input('\nEnter the file name of the log file:\n> ')
+                if logname[-1] == ' ':logname = logname[:-1]
                 if os.path.exists(logpath+logname):
                     Lines = readlog(logpath+logname)
                     break
                 else:print('\n\''+logpath+logname+'\' not found...')
             break
-                
         elif logtypeq == '4': # work with pre-existing z.combined.log file
             logname = 'z.combined.log'
             if os.path.exists(logpath+logname):
@@ -464,7 +460,7 @@ def resultmenu(rlist, q4v=0):
                 return 'refine'
         clear()
 
-def specifylogbath():
+def specifylogpath():
     while True:
         logpath = input('\nEnter the absolute path to the directory which contains the log file(s):\nLinux example /symphony/cpx/customer/logs\nWindows example c:\\users\\user\\desktop\\logs\n> ')
         if logpath[-1] == ' ':
@@ -491,8 +487,8 @@ todatetimestring = ''
 casesetting = 'Insensitive'
 caseselected = 0
 Lines = []
-logpath = specifylogbath()
-logname, logpath, Lines = specifylogs(logpath)
+logpath = specifylogpath()
+logname, logpath, Lines = specifylogs(logpath,1)
 retry = 0
 while True:
     if retry == 0:
@@ -566,7 +562,7 @@ while True:
         clear()
     elif mainmenuq == '3':
         clear()
-        logname, logpath, Lines = specifylogs(logpath)
+        logname, logpath, Lines = specifylogs(logpath, 0, Lines)
     elif mainmenuq == '4':
         retry = 0
         while True:
