@@ -98,8 +98,7 @@ def displayresult(stringlist):
       
     if os.path.exists(logpath+'z.'+fname+'.log'):
         if v1 != '':
-            if ostest[0] == 'W':
-                subprocess.call([v1, v2])
+            if ostest[0] == 'W':subprocess.call([v1, v2])
             else:
                 if v1 == 'vim':subprocess.call([v1, '-c', 'set nowrap', v2])
                 else:subprocess.call([v1, v2])
@@ -255,7 +254,7 @@ def summary(stype):
             else:addtab=''
             uereport += [str(ecount)+addtab+'\t instances of : '+err]
     end = time.time()
-    print('Operation completed inOperation completed in '+str(end - start)[:4]+' seconds\n\n')
+    print('Operation completed in '+str(end - start)[:4]+' seconds\n\n')
     print('total unique '+stype+'s found : '+str(len(uereport)))
     return uereport
 
@@ -278,7 +277,7 @@ def geterrorstacks():
 def getlatency(latencystring,endtrim):
     ints = 0
     pingstring = ''
-    for x in range ((3+endtrim), 10):
+    for x in range ((3+endtrim), 12):
         try:
             if latencystring[-x].isdigit():
                 ints +=1
