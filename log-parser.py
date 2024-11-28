@@ -21,16 +21,18 @@ def countfiles(logpath):
 
 def readfile(inputpath):
     strlist = []
-    file = open(inputpath, 'r')
-    strlist += file.readlines()
-    file.close()
+    with open(inputpath, 'r', encoding='utf-8', errors='ignore') as file:
+        strlist += file.readlines()
     return strlist
 
-def writefile(writepath,list,inputpath='',addlogname=0,WriteAppend='w',printoutputpath=0):
-    with open(writepath, WriteAppend) as f:
-        if addlogname == 1:f.write('\n****************************************'+inputpath+'****************************************\n\n')
-        for item in list:f.write("%s" % item)
-        if printoutputpath != 1:print('File output to : '+writepath)
+def writefile(writepath, list, inputpath='', addlogname=0, WriteAppend='w', printoutputpath=0):
+    with open(writepath, WriteAppend, encoding='utf-8', errors='ignore') as f:
+        if addlogname == 1:
+            f.write('\n****************************************' + inputpath + '****************************************\n\n')
+        for item in list:
+            f.write("%s" % item)
+        if printoutputpath != 1:
+            print('File output to : ' + writepath)
 
 def renamefile(tfname):
     if os.path.exists(logpath+tfname):
@@ -77,29 +79,34 @@ def getfilelist(logpath):
               
 def displayresult(stringlist):
     fname = str(uuid.uuid4())
-    winapps = ['C:\\Program Files\\Notepad++\\notepad++.exe', 'C:\\Program Files (x86)\\Notepad++\\notepad++.exe', 'C:\\Windows\\System32\\notepad.exe'] # From preferred to least preferred
-    with open(logpath+'z.'+fname+'.log', 'w') as f:
+    winapps = ['C:\\Program Files\\Notepad++\\notepad++.exe', 'C:\\Program Files (x86)\\Notepad++\\notepad++.exe', 'C:\\Windows\\System32\\notepad.exe']  # From preferred to least preferred
+    with open(logpath + 'z.' + fname + '.log', 'w', encoding='utf-8', errors='ignore') as f:
         for line in stringlist:
             f.write(line)
     v1 = ''
-    if ostest[0] == 'W': # Windows
+    if ostest[0] == 'W':  # Windows
         for app in winapps:
             if os.path.exists(app):
                 v1 = app
                 break
-    else: # Linux & Mac
-        if os.path.isfile('/usr/bin/vim'):v1 = 'vim'
-        elif os.path.isfile('/usr/bin/nano'):v1 = 'nano'
+    else:  # Linux & Mac
+        if os.path.isfile('/usr/bin/vim'):
+            v1 = 'vim'
+        elif os.path.isfile('/usr/bin/nano'):
+            v1 = 'nano'
 
-    v2 = logpath+'z.'+fname+'.log'
+    v2 = logpath + 'z.' + fname + '.log'
 
-    if os.path.exists(logpath+'z.'+fname+'.log'):
+    if os.path.exists(v2):
         if v1 != '':
-            if ostest[0] == 'W':subprocess.call([v1, v2])
+            if ostest[0] == 'W':
+                subprocess.call([v1, v2])
             else:
-                if v1 == 'vim':subprocess.call([v1, '-c', 'set nowrap', v2])
-                else:subprocess.call([v1, v2])
-        os.remove(logpath+'z.'+fname+'.log')
+                if v1 == 'vim':
+                    subprocess.call([v1, '-c', 'set nowrap', v2])
+                else:
+                    subprocess.call([v1, v2])
+        os.remove(v2)
 
 def readlog(path):    
     start = time.time()
@@ -107,7 +114,7 @@ def readlog(path):
     print('Reading the log file into memory...')
     Linelist = readfile(path)
     end = time.time()            
-    print(str(len(Linelist))+' log lines read in '+str(end - start)[:4]+' seconds')
+    print('{} log lines read in {:.2f} seconds'.format(len(Linelist), end - start))
     return Linelist
 
 def customsearch(searchw1,searchtype,list,cs,searchw2='',searchw3=''):
@@ -333,28 +340,27 @@ def getmultiplelogs(logpath,mlogname):
         writefile(logpath+logname,listtowrite,file,1,'a',1)'''
         #return List
     
-def getmultiplesymphonylogs(logpath='',slogname=''):
+def getmultiplesymphonylogs(logpath='', slogname=''):
     symphonylogtype = slogname[9:]
-    while True:
-        with open(logpath+'z.combined.log', 'w') as f:f.write('')
+    with open(logpath + 'z.combined.log', 'w', encoding='utf-8', errors='ignore') as combined_file:
         logcount = 0
         teststring = ''
-        for x in range (0, 101):
-            teststring = logpath+'symphony-'+symphonylogtype+'-'+str(x)+'.log'
+        for x in range(0, 101):
+            teststring = logpath + 'symphony-' + symphonylogtype + '-' + str(x) + '.log'
             if os.path.exists(teststring):
-                print('Reading : '+teststring)
+                print('Reading : ' + teststring)
                 listtowrite = readfile(teststring)
-                writefile(logpath+'z.combined.log',listtowrite,teststring,1,'a',1) 
+                writefile(logpath + 'z.combined.log', listtowrite, teststring, 1, 'a', 1)
                 logcount += 1
-        if os.path.exists(logpath+'symphony-'+symphonylogtype+'.log'):
-            print('Reading : '+logpath+'symphony-'+symphonylogtype+'.log')
-            listtowrite = readfile(logpath+'symphony-'+symphonylogtype+'.log')
-            writefile(logpath+'z.combined.log',listtowrite,logpath+'symphony-'+symphonylogtype+'.log',1,'a',1)            
+        if os.path.exists(logpath + 'symphony-' + symphonylogtype + '.log'):
+            print('Reading : ' + logpath + 'symphony-' + symphonylogtype + '.log')
+            listtowrite = readfile(logpath + 'symphony-' + symphonylogtype + '.log')
+            writefile(logpath + 'z.combined.log', listtowrite, logpath + 'symphony-' + symphonylogtype + '.log', 1, 'a', 1)
             logcount += 1
-        clear()      
-        print('A single log file has been created with all the log files concatenated in order\nIt is located at \''+logpath+'z.combined.log'+'\'')
-        Lines = readlog(logpath+'z.combined.log')        
-        return Lines
+    clear()
+    print('A single log file has been created with all the log files concatenated in order. It is located at \'{}z.combined.log\''.format(logpath))
+    Lines = readlog(logpath + 'z.combined.log')
+    return Lines
 
 def specifylogs(logpath,firstrun=0,Lines=[]):
     logname = 'z.combined.log'    
