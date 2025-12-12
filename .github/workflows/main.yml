@@ -1,3 +1,4 @@
+I haven't published it yet, as I'd prefer you take a look over it first (obviously i've had AI help me a lot with the python to bash conversion, and then getting that into a workflow
 # Copyright (c) 2025 AVI-SPL Inc.
 # All Rights Reserved.
 #
@@ -44,7 +45,7 @@ on:
         required: true
         default: "0"
       dry_run:
-        description: "Check to not send upgrades; only show what would be upgraded."
+        description: "Check for dry-run mode\nOnly displays what would be upgraded."
         type: boolean
         required: true
         default: false
@@ -81,7 +82,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          # ensure Environmet is chosen
+          # ensure an Environmet was chosen (I added a blank entry (that must fail here), so that PROD wasn't the default choice (even though no default is programmed it just fills the dropdown with the first item in the list, and PROD seems a dangerous choice))
           if [[ -z "${INPUT_ENV//[[:space:]]/}" ]]; then
             echo "ERROR: 'environment' input is required. Please select a non-empty environment."
             exit 1
@@ -363,4 +364,3 @@ jobs:
 
           echo
           echo "Done. Check the Symphony portal for status updates."
-
