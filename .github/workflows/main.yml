@@ -44,7 +44,7 @@ on:
         required: true
         default: "0"
       dry_run:
-        description: "Check for dry-run mode\nOnly displays what would be upgraded."
+        description: "Check for dry-run mode, only displays what would be upgraded."
         type: boolean
         required: true
         default: false
