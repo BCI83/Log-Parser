@@ -26,6 +26,7 @@ on:
           - DEV
           - QA
           - SIM
+        default: ""
       minimum_version:
         description: "Minimum version"
         type: string
