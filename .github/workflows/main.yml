@@ -32,15 +32,15 @@ on:
         required: true
         default: "6.0.0.0"
       target_tag:
-        description: "Target tag"
+        description: "Target tag/version"
         type: string
         required: true
         default: "Auto-select based on Environment"
       sleep_seconds:
-        description: "Pause between upgrade commands"
+        description: "Pause between upgrade commands (seconds)"
         type: string
         required: true
-        default: "1"
+        default: "0"
       dry_run:
         description: "Check to not send upgrades; only show what would be upgraded."
         type: boolean
