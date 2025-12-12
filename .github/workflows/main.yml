@@ -18,6 +18,7 @@ on:
         type: choice
         required: true
         options:
+          - 
           - PROD
           - EMEA
           - PWC
@@ -26,7 +27,7 @@ on:
           - DEV
           - QA
           - SIM
-        default: ""
+        default: 
       minimum_version:
         description: "Minimum version"
         type: string
