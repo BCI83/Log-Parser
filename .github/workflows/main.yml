@@ -42,7 +42,7 @@ on:
         required: true
         default: "1"
       dry_run:
-        description: "If true, do not send upgrades; only show what would be upgraded."
+        description: "Check to not send upgrades; only show what would be upgraded."
         type: boolean
         required: true
         default: false
